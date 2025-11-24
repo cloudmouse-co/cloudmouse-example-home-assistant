@@ -384,7 +384,7 @@ EventType::SYSTEM_READY         // System fully initialized
 
 ### Real-World Example
 
-Check out the **Forex App** example in `lib/forex/` to see a complete implementation with:
+Check out the [**Forex App** example here](https://github.com/cloudmouse-co/cloudmouse-example-forex-app) to see a complete implementation with:
 - Real-time currency exchange rate display
 - WebSocket connection handling
 - Custom UI rendering
@@ -393,7 +393,7 @@ Check out the **Forex App** example in `lib/forex/` to see a complete implementa
 
 ```bash
 # Clone the Forex example
-git clone https://github.com/cloudmouse-co/cloudmouse-example forex-app.git
+git clone https://github.com/cloudmouse-co/cloudmouse-example-forex-app.git
 ```
 
 ---
