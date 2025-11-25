@@ -2,7 +2,7 @@
 
 🎨 **Example implementation of LVGL graphics library on top of CloudMouse SDK**
 
-This project demonstrates how to integrate [LVGL (Light and Versatile Graphics Library)](https://lvgl.io/) with the [CloudMouse SDK](https://github.com/yourusername/cloudmouse-sdk) to create rich, interactive user interfaces on the ESP32-based CloudMouse device.
+This project demonstrates how to integrate [LVGL (Light and Versatile Graphics Library)](https://lvgl.io/) with the [CloudMouse SDK](https://github.com/yourusername/cloudmouse-sdk) to create rich, interactive user interfaces on the ESP32-based [CloudMouse](https://cloudmouse.co) device.
 
 ## 📋 Overview
 
@@ -73,10 +73,14 @@ Or you can copy and paste the following config snippet.
 #ifndef LV_CONF_H
 #define LV_CONF_H
 
+#define LV_USE_PERF_MONITOR 1
+#define LV_USE_MEM_MONITOR 1
+
 #define LV_COLOR_DEPTH 16
 #define LV_COLOR_16_SWAP 1
 #define LV_MEM_SIZE (48U * 1024U)
 
+#define LV_FONT_MONTSERRAT_12 1
 #define LV_FONT_MONTSERRAT_14 1
 #define LV_FONT_MONTSERRAT_16 1
 #define LV_FONT_MONTSERRAT_18 1
@@ -124,7 +128,7 @@ Or you can copy and paste the following config snippet.
 ### 3. Clone and Open
 
 ```bash
-git clone https://github.com/tibonilab/cloudmouse-lvgl-example
+git clone https://github.com/cloudmouse-co/cloudmouse-example-lvgl
 ```
 
 Open the `.ino` file in Arduino IDE.
@@ -135,7 +139,7 @@ Select your ESP32 board and upload the sketch.
 
 ## 🏗️ Architecture
 
-This example follows the CloudMouse SDK architecture:
+This example follows the [CloudMouse SDK](https://github.com/cloudmouse-co/cloudmouse-sdk) architecture:
 
 ```
 ┌─────────────────┐
