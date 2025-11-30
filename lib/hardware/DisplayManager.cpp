@@ -47,7 +47,7 @@ namespace CloudMouse::Hardware
 
     void DisplayManager::init()
     {
-        Serial.println("🖥️ Initializing DisplayManager con LVGL v9...");
+        SDK_LOGGER("🖥️ Initializing DisplayManager con LVGL v9...");
 
         display.init();
         display.setBrightness(200);
@@ -61,10 +61,10 @@ namespace CloudMouse::Hardware
 
         if (!buf1 || !buf2)
         {
-            Serial.println("❌ LVGL in PSRAM buffer failed!");
+            SDK_LOGGER("❌ LVGL in PSRAM buffer failed!");
             return;
         }
-        Serial.printf("✅ Buffer LVGL allocated in PSRAM (2x %d bytes)\n", sizeof(lv_color_t) * bufSize);
+        SDK_LOGGER("✅ Buffer LVGL allocated in PSRAM (2x %d bytes)\n", sizeof(lv_color_t) * bufSize);
 
         // Flushing PSRAM buffers to prevent residual corrupted data on power disconnection
         const size_t totalBufBytes = sizeof(lv_color_t) * bufSize;
@@ -72,13 +72,13 @@ namespace CloudMouse::Hardware
         memset(buf1, 0, totalBufBytes);
         memset(buf2, 0, totalBufBytes);
 
-        Serial.println("✅ PSRAM Buffers flushed.");
+        SDK_LOGGER("✅ PSRAM Buffers flushed.");
 
         // LVGL display driver init (v9)
         disp = lv_display_create(getWidth(), getHeight());
         if (disp == NULL)
         {
-            Serial.println("❌ LVGL display creation failed!");
+            SDK_LOGGER("❌ LVGL display creation failed!");
             return;
         }
         lv_display_set_flush_cb(disp, lvgl_flush_cb);
@@ -91,7 +91,7 @@ namespace CloudMouse::Hardware
         indev = lv_indev_create();
         if (indev == NULL)
         {
-            Serial.println("❌ LVGL indev init failed!");
+            SDK_LOGGER("❌ LVGL indev init failed!");
             return;
         }
         lv_indev_set_type(indev, LV_INDEV_TYPE_ENCODER);
@@ -104,7 +104,7 @@ namespace CloudMouse::Hardware
         lv_indev_set_group(indev, encoder_group);
 
         // Create LVGL UI
-        Serial.println("🎨 Creating UI LVGL...");
+        SDK_LOGGER("🎨 Creating UI LVGL...");
         createUi();
 
         #if SHOW_LVGL_PERFORMANCE_MONITOR
@@ -112,7 +112,7 @@ namespace CloudMouse::Hardware
         #endif 
 
         initialized = true;
-        Serial.printf("✅ DisplayManager with LVGL v9 succesfully initialized!\n");
+        SDK_LOGGER("✅ DisplayManager with LVGL v9 succesfully initialized!\n");
     }
 
     void DisplayManager::update()
@@ -146,12 +146,12 @@ namespace CloudMouse::Hardware
         uint32_t fps = frameTime > 0 ? 1000 / frameTime : 0;
         lastFrameTime = now;
 
-        Serial.println("\n📊 LVGL Performance Stats:");
-        Serial.printf("   FPS: ~%d (frame time: %dms)\n", fps, frameTime);
-        Serial.printf("   CPU: %d%%\n", cpu_usage);
-        Serial.printf("   Memory: %d%% used (%d/%d bytes)\n",
+        SDK_LOGGER("\n📊 LVGL Performance Stats:");
+        SDK_LOGGER("   FPS: ~%d (frame time: %dms)\n", fps, frameTime);
+        SDK_LOGGER("   CPU: %d%%\n", cpu_usage);
+        SDK_LOGGER("   Memory: %d%% used (%d/%d bytes)\n",
                       mon.used_pct, mon.total_size - mon.free_size, mon.total_size);
-        Serial.printf("   Fragmentation: %d%%\n\n", mon.frag_pct);
+        SDK_LOGGER("   Fragmentation: %d%%\n\n", mon.frag_pct);
     }
 
     void DisplayManager::handleDimmer()
@@ -249,12 +249,14 @@ namespace CloudMouse::Hardware
         case EventType::DISPLAY_WAKE_UP:
             wakeUp();
             // Display activation - show default interactive screen
-            Serial.println("📺 Display wake up - switching to HELLO_WORLD");
+            SDK_LOGGER("📺 Display wake up - switching to HELLO_WORLD");
             currentScreen = Screen::HELLO_WORLD;
             lv_disp_load_scr(screen_hello_world);
             break;
 
         case EventType::DISPLAY_WIFI_CONNECTING:
+            // WiFi connection attempt - show animated progress screen
+            SDK_LOGGER("📡 Display: Showing WiFi connecting screen with animation");
             currentScreen = Screen::WIFI_CONNECTING;
             lv_disp_load_scr(screen_wifi_connecting);
             break;
@@ -288,6 +290,8 @@ namespace CloudMouse::Hardware
 
         case EventType::DISPLAY_WIFI_AP_MODE:
             wakeUp();
+            // Access Point mode - show WiFi connection QR code
+            SDK_LOGGER("📱 Switching to AP Mode screen - WiFi setup required");
             currentScreen = Screen::WIFI_AP_MODE;
             {
                 String apSSID = GET_AP_SSID();
@@ -303,6 +307,8 @@ namespace CloudMouse::Hardware
 
         case EventType::DISPLAY_WIFI_SETUP_URL:
             wakeUp();
+            // Client connected to AP - show web configuration QR code
+            SDK_LOGGER("🌐 Switching to AP Connected screen - web setup available");
             currentScreen = Screen::WIFI_AP_CONNECTED;
             lv_qrcode_set_data(qr_ap_connected, WIFI_CONFIG_SERVICE);
             lv_label_set_text(label_ap_connected_url, WIFI_CONFIG_SERVICE);

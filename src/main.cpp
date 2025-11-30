@@ -19,6 +19,7 @@
 #include "../lib/network/WiFiManager.h"
 #include "../lib/network/WebServerManager.h"
 #include "../lib/hardware/LEDManager.h"
+#include "../lib/utils/Logger.h"
 #include "../lib/app/HomeAssistantApp.h"
 
 using namespace CloudMouse;
@@ -37,9 +38,7 @@ void setup() {
     delay(1000);
 
     // Welcome message
-    Serial.println();
-    Serial.println("🚀 CloudMouse SDK Boilerplate v1.0");
-    Serial.println("   Ready to build something amazing! 🎯");
+    SDK_LOGGER("🏡 CloudMouse Home Assistant v1.0");
     
     // Initialize hardware components
     SimpleBuzzer::init();
@@ -60,7 +59,7 @@ void setup() {
     Core::instance().startUITask();     // UI rendering on Core 1
     Core::instance().initialize();      // Event system on Core 0
     
-    Serial.println("✅ System ready!");
+    SDK_LOGGER("✅ System ready!");
 }
 
 void loop() {
