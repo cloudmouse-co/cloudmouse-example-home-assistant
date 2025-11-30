@@ -53,6 +53,8 @@ namespace CloudMouse::App::Ui
         lv_obj_t *climate_arc_slider;
         lv_obj_t *climate_label_state;
         lv_obj_t *climate_label_target;
+        lv_obj_t *climate_label_target_unit;
+        lv_obj_t *climate_label_target_decimal;
         lv_obj_t *climate_label_current;
         lv_obj_t *climate_btn_on;
         lv_obj_t *climate_btn_off;

@@ -201,8 +201,12 @@ namespace CloudMouse::App::Ui
     
                     // ✅ Mostra con decimale
                     float temp = newValue / 10.0f;
-                    String tempStr = String(temp, 1) + "°C";
-                    lv_label_set_text(climate_label_target, tempStr.c_str());
+                    String tempStr = String(temp, 0);
+                    int parte_intera = newValue / 10;
+                    int parte_decimale = newValue % 10; 
+
+                    lv_label_set_text_fmt(climate_label_target, "%d", parte_intera);
+                    lv_label_set_text_fmt(climate_label_target_decimal, ".%d", parte_decimale);
     
                     APP_LOGGER("Arc value: %.1f", temp);
                 }
@@ -266,6 +270,8 @@ namespace CloudMouse::App::Ui
         lv_obj_set_style_bg_color(header, lv_color_hex(0x222222), 0);
         lv_obj_set_style_border_width(header, 0, 0);
         lv_obj_set_style_radius(header, 0, 0);
+        lv_obj_set_scrollbar_mode(header, LV_SCROLLBAR_MODE_OFF);
+
 
         lv_obj_t *label = lv_label_create(header);
         lv_label_set_text(label, title);
@@ -438,8 +444,8 @@ namespace CloudMouse::App::Ui
             lv_obj_set_style_pad_all(item, 10, 0);
 
             // FOCUSED state
-            lv_obj_set_style_bg_color(item, lv_color_hex(0x0d47a1), LV_STATE_FOCUSED);
-            lv_obj_set_style_border_color(item, lv_color_hex(0x2196F3), LV_STATE_FOCUSED);
+            lv_obj_set_style_bg_color(item, lv_color_hex(0x8d4119), LV_STATE_FOCUSED);
+            lv_obj_set_style_border_color(item, lv_color_hex(0xFF6F22), LV_STATE_FOCUSED);
             lv_obj_set_style_border_width(item, 2, LV_STATE_FOCUSED);
 
             lv_obj_add_flag(item, LV_OBJ_FLAG_CLICKABLE);
@@ -542,66 +548,93 @@ namespace CloudMouse::App::Ui
 
         // Container principale
         lv_obj_t *container = lv_obj_create(screen_climate_detail);
-        lv_obj_set_size(container, 460, 260);
-        lv_obj_align(container, LV_ALIGN_CENTER, 0, 10);
+        lv_obj_set_size(container, 480, 260);
+        lv_obj_align(container, LV_ALIGN_CENTER, 0, 15);
         lv_obj_set_style_bg_color(container, lv_color_hex(0x1a1a1a), 0);
         lv_obj_set_style_border_width(container, 0, 0);
         lv_obj_set_scrollbar_mode(container, LV_SCROLLBAR_MODE_OFF);
 
+        lv_obj_t *arc_container = lv_obj_create(container);
+        lv_obj_set_size(arc_container, 240, 260);
+        lv_obj_align(arc_container, LV_ALIGN_LEFT_MID, 28, 10);
+        lv_obj_set_style_bg_opa(arc_container, 0, 0);
+        lv_obj_set_style_border_width(arc_container, 0, 0);
+        lv_obj_set_flex_flow(arc_container, LV_FLEX_FLOW_ROW);
+        lv_obj_set_flex_align(arc_container, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_scrollbar_mode(arc_container, LV_SCROLLBAR_MODE_OFF);
+
         // Arc slider (centro)
-        climate_arc_slider = lv_arc_create(container);
-        lv_obj_set_size(climate_arc_slider, 180, 180);
-        lv_obj_align(climate_arc_slider, LV_ALIGN_CENTER, 0, -10);
+        climate_arc_slider = lv_arc_create(arc_container);
+        lv_obj_set_size(climate_arc_slider, 210, 210);
+        lv_obj_align(climate_arc_slider, LV_ALIGN_LEFT_MID, 55, -10);
         lv_arc_set_range(climate_arc_slider, 150, 300);
         lv_arc_set_value(climate_arc_slider, 210);
         lv_arc_set_bg_angles(climate_arc_slider, 135, 45);
         lv_obj_set_style_arc_width(climate_arc_slider, 15, LV_PART_MAIN);
-        lv_obj_set_style_arc_width(climate_arc_slider, 15, LV_PART_INDICATOR);
-        lv_obj_set_style_arc_color(climate_arc_slider, lv_color_hex(0xFF9800), LV_PART_INDICATOR);
+        lv_obj_set_style_arc_color(climate_arc_slider, lv_color_hex(0x292929), LV_PART_MAIN);
+        lv_obj_set_style_arc_width(climate_arc_slider, 18, LV_PART_INDICATOR);
+        lv_obj_set_style_arc_color(climate_arc_slider, lv_color_hex(0xFF6F22), LV_PART_INDICATOR);
 
         // Style per focus
-        lv_obj_set_style_arc_color(climate_arc_slider, lv_color_hex(0xFFD700), LV_PART_INDICATOR | LV_STATE_FOCUSED);
+        lv_obj_set_style_arc_color(climate_arc_slider, lv_color_hex(0xDD6626), LV_PART_INDICATOR | LV_STATE_FOCUSED);
         lv_obj_set_style_arc_width(climate_arc_slider, 18, LV_PART_INDICATOR | LV_STATE_FOCUSED);
+
+        lv_obj_set_style_arc_color(climate_arc_slider, lv_color_hex(0x8D421A), LV_PART_INDICATOR | LV_STATE_EDITED);
+
 
         lv_obj_add_flag(climate_arc_slider, LV_OBJ_FLAG_CLICKABLE);
 
         // Label target temperatura (dentro l'arco)
         climate_label_target = lv_label_create(climate_arc_slider);
-        lv_label_set_text(climate_label_target, "21.0°C");
-        lv_obj_set_style_text_font(climate_label_target, &lv_font_montserrat_36, 0);
+        lv_label_set_text(climate_label_target, "21");
+        lv_obj_set_style_text_font(climate_label_target, &lv_font_montserrat_48, 0);
         lv_obj_set_style_text_color(climate_label_target, lv_color_hex(0xFFFFFF), 0);
         lv_obj_center(climate_label_target);
 
+        climate_label_target_unit = lv_label_create(climate_arc_slider);
+        lv_label_set_text(climate_label_target_unit, "°C");
+        lv_obj_align(climate_label_target_unit, LV_ALIGN_CENTER, 36, -13);
+        lv_obj_set_style_text_font(climate_label_target_unit, &lv_font_montserrat_14, 0);
+        lv_obj_set_style_text_color(climate_label_target_unit, lv_color_hex(0xFFFFFF), 0);
+        // lv_obj_center(climate_label_target_unit);
+
+        climate_label_target_decimal = lv_label_create(climate_arc_slider);
+        lv_label_set_text(climate_label_target_decimal, ",2");
+        lv_obj_align(climate_label_target_decimal, LV_ALIGN_CENTER, 36, 13);
+        lv_obj_set_style_text_font(climate_label_target_decimal, &lv_font_montserrat_14, 0);
+        lv_obj_set_style_text_color(climate_label_target_decimal, lv_color_hex(0xFFFFFF), 0);
+        // lv_obj_center(climate_label_target_decimal);
+
         // Label stato (sopra l'arco)
-        climate_label_state = lv_label_create(container);
+        climate_label_state = lv_label_create(climate_arc_slider);
         lv_label_set_text(climate_label_state, "Idle");
         lv_obj_set_style_text_font(climate_label_state, &lv_font_montserrat_16, 0);
         lv_obj_set_style_text_color(climate_label_state, lv_color_hex(0x888888), 0);
-        lv_obj_align(climate_label_state, LV_ALIGN_TOP_MID, 0, 60);
+        lv_obj_align(climate_label_state, LV_ALIGN_TOP_MID, 0, 50);
 
         // Label temperatura corrente (sotto l'arco)
-        climate_label_current = lv_label_create(container);
+        climate_label_current = lv_label_create(climate_arc_slider);
         lv_label_set_text(climate_label_current, "22°C");
         lv_obj_set_style_text_font(climate_label_current, &lv_font_montserrat_18, 0);
-        lv_obj_set_style_text_color(climate_label_current, lv_color_hex(0x2196F3), 0);
-        lv_obj_align(climate_label_current, LV_ALIGN_BOTTOM_MID, 0, -60);
+        lv_obj_set_style_text_color(climate_label_current, lv_color_hex(0x999999), 0);
+        lv_obj_align(climate_label_current, LV_ALIGN_BOTTOM_MID, 0, -45);
 
         // Bottoni ON/OFF (in basso)
         lv_obj_t *btn_container = lv_obj_create(container);
-        lv_obj_set_size(btn_container, 400, 50);
-        lv_obj_align(btn_container, LV_ALIGN_BOTTOM_MID, 0, -5);
+        lv_obj_set_size(btn_container, 140, 260);
+        lv_obj_align(btn_container, LV_ALIGN_RIGHT_MID, 0, 0);
         lv_obj_set_style_bg_opa(btn_container, 0, 0);
         lv_obj_set_style_border_width(btn_container, 0, 0);
-        lv_obj_set_flex_flow(btn_container, LV_FLEX_FLOW_ROW);
+        lv_obj_set_flex_flow(btn_container, LV_FLEX_FLOW_COLUMN_WRAP);
         lv_obj_set_flex_align(btn_container, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_set_scrollbar_mode(btn_container, LV_SCROLLBAR_MODE_OFF);
 
 
         // Bottone ON
         climate_btn_on = lv_button_create(btn_container);
-        lv_obj_set_size(climate_btn_on, 180, 45);
-        lv_obj_set_style_bg_color(climate_btn_on, lv_color_hex(0x4CAF50), 0);
-        lv_obj_set_style_bg_color(climate_btn_on, lv_color_hex(0x66BB6A), LV_STATE_FOCUSED);
+        lv_obj_set_size(climate_btn_on, 100, 100);
+        lv_obj_set_style_bg_color(climate_btn_on, lv_color_hex(0x323232), 0);
+        lv_obj_set_style_bg_color(climate_btn_on, lv_color_hex(0x525252), LV_STATE_FOCUSED);
         lv_obj_add_flag(climate_btn_on, LV_OBJ_FLAG_CLICKABLE);
 
         lv_obj_t *label_on = lv_label_create(climate_btn_on);
@@ -610,9 +643,9 @@ namespace CloudMouse::App::Ui
 
         // Bottone OFF
         climate_btn_off = lv_button_create(btn_container);
-        lv_obj_set_size(climate_btn_off, 180, 45);
-        lv_obj_set_style_bg_color(climate_btn_off, lv_color_hex(0xF44336), 0);
-        lv_obj_set_style_bg_color(climate_btn_off, lv_color_hex(0xFF5252), LV_STATE_FOCUSED);
+        lv_obj_set_size(climate_btn_off, 100, 100);
+        lv_obj_set_style_bg_color(climate_btn_off, lv_color_hex(0x323232), 0);
+        lv_obj_set_style_bg_color(climate_btn_off, lv_color_hex(0x525252), LV_STATE_FOCUSED);
         lv_obj_add_flag(climate_btn_off, LV_OBJ_FLAG_CLICKABLE);
 
         lv_obj_t *label_off = lv_label_create(climate_btn_off);
@@ -641,7 +674,7 @@ namespace CloudMouse::App::Ui
 
         // TODO: fetch data from Home Assistant per entityId
         lv_arc_set_value(climate_arc_slider, 210);
-        lv_label_set_text(climate_label_target, "21.0°C");
+        lv_label_set_text(climate_label_target, "21");
         lv_label_set_text(climate_label_state, "Idle");
         lv_label_set_text(climate_label_current, "22°C");
         

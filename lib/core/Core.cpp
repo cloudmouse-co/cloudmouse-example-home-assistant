@@ -378,7 +378,7 @@ namespace CloudMouse
     }
 
     // Audio feedback
-    SimpleBuzzer::buzz();
+    // SimpleBuzzer::buzz();
 
     // Forward to UI system
     EventBus::instance().sendToUI(event);
@@ -395,7 +395,7 @@ namespace CloudMouse
     }
 
     // Audio feedback: error pattern
-    SimpleBuzzer::error();
+    // SimpleBuzzer::error();
 
     // Forward to UI system
     EventBus::instance().sendToUI(event);
