@@ -1,15 +1,15 @@
-/**
- * CloudMouse SDK - Boilerplate Firmware
- * 
- * This is the main entry point for CloudMouse applications.
- * Fork this project and modify it to build your custom applications.
- * 
- * Features:
- * - Dual-core architecture (UI on Core 1, Logic on Core 0)
- * - Event-driven system with hardware abstraction
- * - Multi-platform support (Arduino IDE + PlatformIO)
- * - Hardware components: Display, Encoder, LEDs, WiFi, Buzzer
- */
+// /**
+//  * CloudMouse SDK - Boilerplate Firmware
+//  * 
+//  * This is the main entry point for CloudMouse applications.
+//  * Fork this project and modify it to build your custom applications.
+//  * 
+//  * Features:
+//  * - Dual-core architecture (UI on Core 1, Logic on Core 0)
+//  * - Event-driven system with hardware abstraction
+//  * - Multi-platform support (Arduino IDE + PlatformIO)
+//  * - Hardware components: Display, Encoder, LEDs, WiFi, Buzzer
+//  */
 
 // Platform-specific includes for maximum compatibility
 #include "../lib/core/Core.h"
