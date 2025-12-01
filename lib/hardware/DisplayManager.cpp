@@ -469,8 +469,8 @@ namespace CloudMouse::Hardware
         // Create on the top layer instead of screen_active
         lv_obj_t* label = lv_label_create(lv_layer_top());
         lv_obj_set_style_text_color(label, lv_color_hex(0x00FF00), 0);
-        lv_obj_set_style_text_font(label, &lv_font_montserrat_12, 0);
-        lv_obj_align(label, LV_ALIGN_TOP_RIGHT, -5, 5);
+        lv_obj_set_style_text_font(label, &lv_font_montserrat_10, 0);
+        lv_obj_align(label, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
         lv_label_set_text(label, "FPS: -- CPU: --%");
         
         // Make it stay on top

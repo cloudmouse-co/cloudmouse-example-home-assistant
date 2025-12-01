@@ -57,6 +57,14 @@ namespace CloudMouse::App
 
     void HomeAssistantApp::processSDKEvent(const CloudMouse::Event &event)
     {
+
+        APP_LOGGER("is app event: %s - for event %d", isAppEvent(event) ? "TRUE" : "FALSE", event.type);
+
+        if (isAppEvent(event))
+        {
+            processAppEvent(toAppEvent(event));
+        }
+
         switch (event.type)
         {
         case CloudMouse::EventType::WIFI_CONNECTED:
@@ -68,6 +76,28 @@ namespace CloudMouse::App
             break;
 
         default:
+            break;
+        }
+    }
+
+    void HomeAssistantApp::processAppEvent(const AppEventData &event)
+    {
+        APP_LOGGER("processing APP event inside orchestrator: %d", event.type);
+        switch (event.type)
+        {
+        case AppEventType::FETCH_ENTITY_STATUS:
+            APP_LOGGER("Received FETCH_ENTITY_STATUS for entity: %s", event.getStringData());
+            dataService->fetchEntityStatus(event.getStringData());
+            break;
+
+        case AppEventType::CALL_SWITCH_ON_SERVICE:
+            APP_LOGGER("Received CALL_SWITCH_ON_SERVICE for entity: %s", event.getStringData().c_str());
+            dataService->setSwitchOn(event.getStringData());
+            break;
+
+        case AppEventType::CALL_SWITCH_OFF_SERVICE:
+            APP_LOGGER("Received CALL_SWITCH_OFF_SERVICE for entity: %s", event.getStringData().c_str());
+            dataService->setSwitchOff(event.getStringData());
             break;
         }
     }
@@ -144,11 +174,6 @@ namespace CloudMouse::App
         }
         else
         {
-            changeState(AppState::READY);
-        }
-
-        if (currentState == AppState::READY)
-        {
             dataService = new HomeAssistantDataService(*prefs);
             if (!dataService->init())
             {
@@ -157,7 +182,21 @@ namespace CloudMouse::App
             }
             APP_LOGGER("✅ Data service initialized");
 
-            notifyDisplay(AppEventData::event(AppEventType::SHOW_ENTITY_LIST));
+            String entitiesJson = prefs->getSelectedEntities();
+            JsonDocument doc;
+            DeserializationError error = deserializeJson(doc, entitiesJson);
+
+            JsonArray entities = doc.as<JsonArray>();
+            int entityCount = entities.size();
+            for (int i = 0; i < entityCount; i++)
+            {
+                JsonObject entity = entities[i];
+                String entityId = entity["entity_id"].as<String>();
+                dataService->fetchEntityStatus(entityId);
+                delay(100);
+            }
+
+            changeState(AppState::READY);
         }
     }
 
@@ -171,24 +210,38 @@ namespace CloudMouse::App
     {
         APP_LOGGER("RECEIVED Config changed from config server callback");
 
-        if ( ! configServer->hasValidSetup()) 
+        if (!configServer->hasValidSetup())
         {
             changeState(AppState::SETUP_NEEDED);
             return;
         }
 
-        if ( ! configServer->hasValidConfig())
+        if (!configServer->hasValidConfig())
         {
             changeState(AppState::CONFIG_NEEDED);
             return;
         }
 
-        if (currentState != AppState::READY) 
+        if (currentState != AppState::READY)
         {
+            String entitiesJson = prefs->getSelectedEntities();
+            JsonDocument doc;
+            DeserializationError error = deserializeJson(doc, entitiesJson);
+
+            JsonArray entities = doc.as<JsonArray>();
+            int entityCount = entities.size();
+            for (int i = 0; i < entityCount; i++)
+            {
+                JsonObject entity = entities[i];
+                String entityId = entity["entity_id"].as<String>();
+                dataService->fetchEntityStatus(entityId);
+                delay(100);
+            }
+
             changeState(AppState::READY);
             return;
         }
-        
+
         notifyDisplay(AppEventData::event(AppEventType::CONFIG_SET));
     }
 }

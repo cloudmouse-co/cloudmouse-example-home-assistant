@@ -1,5 +1,7 @@
 #include "HomeAssistantDisplayManager.h"
 #include "../HomeAssistantApp.h"
+#include "../model/HomeAssistantAppStore.h"
+#include "../model/HomeAssistantEntity.h"
 
 namespace CloudMouse::App::Ui
 {
@@ -47,6 +49,7 @@ namespace CloudMouse::App::Ui
         createEntityListScreen();
         createEntityDetailScreen();
         createClimateDetailScreen();
+        createSwitchDetailScreen();
 
         APP_LOGGER("Display manager BOOTSTRAP completed");
     }
@@ -76,6 +79,11 @@ namespace CloudMouse::App::Ui
             showEntityList();
             break;
 
+        case AppEventType::ENTITY_UPDATED:
+            APP_LOGGER("RECEIVED ENTITY_UPDATED for: %s", event.getStringData().c_str());
+            updateEntityItem(event.getStringData());
+            break;
+        
         default:
             break;
         }
@@ -118,11 +126,20 @@ namespace CloudMouse::App::Ui
 
                             APP_LOGGER("Selected entity: %s", entityId.c_str());
 
+                            CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::fetchEntityStatus(entityId.c_str())));
+
+                            currentEntityId = entityId;
+
                             // Controlla il tipo dall'entity_id
                             if (entityId.startsWith("climate."))
                             {
                                 APP_LOGGER("Opening climate detail");
                                 showClimateDetail(entityId);
+                            }
+                            else if (entityId.startsWith("switch."))
+                            {
+                                APP_LOGGER("Opening sensor detail");
+                                showSwitchDetail(entityId);
                             }
                             else
                             {
@@ -165,6 +182,20 @@ namespace CloudMouse::App::Ui
                     // TODO: call HA service
                 }
             }
+            else if (lv_screen_active() == screen_switch_detail)
+            {
+                lv_obj_t *focused = lv_group_get_focused(encoder_group);
+                if (focused == switch_btn_on)
+                {
+                    APP_LOGGER("ON button clicked!");
+                    CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callSwitchOn(currentEntityId)));
+                }
+                else if (focused == switch_btn_off)
+                {
+                    APP_LOGGER("OFF button clicked!");
+                    CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callSwitchOff(currentEntityId)));
+                }
+            }
             else if (lv_screen_active() == screen_entity_detail)
             {
                 showEntityList();
@@ -177,38 +208,37 @@ namespace CloudMouse::App::Ui
         {
             APP_LOGGER("ENCODER ROTATE (managed by LVGL): %d", event.value);
 
-            APP_LOGGER("CLIMATE ARC EDITING IS: %s", climate_arc_editing ? "true" : "false");
-
+            
             if (lv_screen_active() == screen_climate_detail)
             {
+                APP_LOGGER("CLIMATE ARC EDITING IS: %s", climate_arc_editing ? "true" : "false");
+
                 lv_obj_t *focused = lv_group_get_focused(encoder_group);
-                if (!focused) {
+                if (!focused)
+                {
                     lv_group_focus_obj(climate_arc_slider);
                 }
 
-                if (climate_arc_editing) 
+                if (climate_arc_editing)
                 {
-                    int current = lv_arc_get_value(climate_arc_slider);
-                    int newValue = current + event.value; // ✅ +1 o -1 = 0.1°C
-    
+                    int newValue = currentTargetValue + event.value;
+
                     // Clamp tra 150-300
                     if (newValue < 150)
                         newValue = 150;
                     if (newValue > 300)
                         newValue = 300;
-    
+
                     lv_arc_set_value(climate_arc_slider, newValue);
-    
-                    // ✅ Mostra con decimale
-                    float temp = newValue / 10.0f;
-                    String tempStr = String(temp, 0);
+                    currentTargetValue = newValue;
+
                     int parte_intera = newValue / 10;
-                    int parte_decimale = newValue % 10; 
+                    int parte_decimale = newValue % 10;
 
                     lv_label_set_text_fmt(climate_label_target, "%d", parte_intera);
-                    lv_label_set_text_fmt(climate_label_target_decimal, ".%d", parte_decimale);
-    
-                    APP_LOGGER("Arc value: %.1f", temp);
+                    lv_label_set_text_fmt(climate_label_target_decimal, ",%d", parte_decimale);
+
+                    APP_LOGGER("Arc value: %.1f", newValue / 10.0f);
                 }
             }
             break;
@@ -224,12 +254,12 @@ namespace CloudMouse::App::Ui
             }
 
             // Long press torna sempre alla lista da qualsiasi detail
-            if (lv_screen_active() == screen_climate_detail ||
-                lv_screen_active() == screen_entity_detail)
-            {
+            // if (lv_screen_active() == screen_climate_detail ||
+            //     lv_screen_active() == screen_entity_detail)
+            // {
                 climate_arc_editing = false; // reset editing mode
                 showEntityList();
-            }
+            // }
             break;
         }
 
@@ -272,11 +302,10 @@ namespace CloudMouse::App::Ui
         lv_obj_set_style_radius(header, 0, 0);
         lv_obj_set_scrollbar_mode(header, LV_SCROLLBAR_MODE_OFF);
 
-
-        lv_obj_t *label = lv_label_create(header);
-        lv_label_set_text(label, title);
-        lv_obj_set_style_text_color(label, lv_color_hex(0xFFFFFF), 0);
-        lv_obj_center(label);
+        header_label = lv_label_create(header);
+        lv_label_set_text(header_label, title);
+        lv_obj_set_style_text_color(header_label, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_center(header_label);
     }
 
     // ============================================================================
@@ -427,6 +456,9 @@ namespace CloudMouse::App::Ui
             String entityId = entity["entity_id"].as<String>();
             String friendlyName = entity["friendly_name"].as<String>();
 
+            auto entityData = AppStore::instance().getEntity(entityId);
+            APP_LOGGER("entityData friendly name: %s", entityData->getFriendlyName());
+
             // Fallback se friendly_name vuoto
             if (friendlyName.isEmpty())
             {
@@ -463,6 +495,14 @@ namespace CloudMouse::App::Ui
             lv_obj_set_style_text_color(label, lv_color_hex(0xFFFFFF), 0);
             lv_obj_set_style_text_font(label, &lv_font_montserrat_16, 0);
             lv_obj_align(label, LV_ALIGN_LEFT_MID, 5, 0);
+
+            const char *state = entityData->getState();
+
+            lv_obj_t *state_label = lv_label_create(item);
+            lv_label_set_text(state_label, state);
+            lv_obj_set_style_text_color(state_label, lv_color_hex(0xFFFFFF), 0);
+            lv_obj_set_style_text_font(state_label, &lv_font_montserrat_12, 0);
+            lv_obj_align(state_label, LV_ALIGN_RIGHT_MID, -5, 0);
 
             // Salva entity_id come user_data per usarlo dopo
             lv_obj_set_user_data(item, strdup(entityId.c_str()));
@@ -539,6 +579,66 @@ namespace CloudMouse::App::Ui
         lv_screen_load(screen_entity_detail);
     }
 
+    void HomeAssistantDisplayManager::createSwitchDetailScreen()
+    {
+        screen_switch_detail = lv_obj_create(NULL);
+        lv_obj_set_style_bg_color(screen_switch_detail, lv_color_hex(0x000000), 0);
+
+        createHeader(screen_switch_detail, "Entity Sensor Detail");
+
+        // Container placeholder
+        lv_obj_t *container = lv_obj_create(screen_switch_detail);
+        lv_obj_set_size(container, 460, 260);
+        lv_obj_align(container, LV_ALIGN_CENTER, 0, 10);
+        lv_obj_set_style_bg_color(container, lv_color_hex(0x1a1a1a), 0);
+        lv_obj_set_style_border_width(container, 2, 0);
+        lv_obj_set_style_border_color(container, lv_color_hex(0x2196F3), 0);
+        lv_obj_set_flex_flow(container, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(container, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+        // Bottone ON
+        switch_btn_on = lv_button_create(container);
+        lv_obj_set_size(switch_btn_on, 100, 100);
+        lv_obj_set_style_bg_color(switch_btn_on, lv_color_hex(0x323232), 0);
+        lv_obj_set_style_bg_color(switch_btn_on, lv_color_hex(0x525252), LV_STATE_FOCUSED);
+        lv_obj_add_flag(switch_btn_on, LV_OBJ_FLAG_CLICKABLE);
+
+        lv_obj_t *label_on = lv_label_create(switch_btn_on);
+        lv_label_set_text(label_on, LV_SYMBOL_POWER " ON");
+        lv_obj_center(label_on);
+
+        // Bottone OFF
+        switch_btn_off = lv_button_create(container);
+        lv_obj_set_size(switch_btn_off, 100, 100);
+        lv_obj_set_style_bg_color(switch_btn_off, lv_color_hex(0x323232), 0);
+        lv_obj_set_style_bg_color(switch_btn_off, lv_color_hex(0x525252), LV_STATE_FOCUSED);
+        lv_obj_add_flag(switch_btn_off, LV_OBJ_FLAG_CLICKABLE);
+
+        lv_obj_t *label_off = lv_label_create(switch_btn_off);
+        lv_label_set_text(label_off, LV_SYMBOL_POWER " OFF");
+        lv_obj_center(label_off);
+
+        // Aggiungi al gruppo encoder
+        lv_group_add_obj(encoder_group, switch_btn_on);
+        lv_group_add_obj(encoder_group, switch_btn_off);
+
+        APP_LOGGER("✅ Sensor detail screen created");
+    }
+
+    void HomeAssistantDisplayManager::showSwitchDetail(const String &entityId)
+    {
+        APP_LOGGER("Showing detail for entity %s", entityId);
+
+        auto entity = AppStore::instance().getEntity(entityId);
+        lv_label_set_text(header_label, entity->getFriendlyName());
+
+        lv_group_remove_all_objs(encoder_group);
+        lv_group_add_obj(encoder_group, switch_btn_on);
+        lv_group_add_obj(encoder_group, switch_btn_off);
+
+        lv_screen_load(screen_switch_detail);
+    }
+
     void HomeAssistantDisplayManager::createClimateDetailScreen()
     {
         screen_climate_detail = lv_obj_create(NULL);
@@ -581,7 +681,6 @@ namespace CloudMouse::App::Ui
 
         lv_obj_set_style_arc_color(climate_arc_slider, lv_color_hex(0x8D421A), LV_PART_INDICATOR | LV_STATE_EDITED);
 
-
         lv_obj_add_flag(climate_arc_slider, LV_OBJ_FLAG_CLICKABLE);
 
         // Label target temperatura (dentro l'arco)
@@ -589,18 +688,19 @@ namespace CloudMouse::App::Ui
         lv_label_set_text(climate_label_target, "21");
         lv_obj_set_style_text_font(climate_label_target, &lv_font_montserrat_48, 0);
         lv_obj_set_style_text_color(climate_label_target, lv_color_hex(0xFFFFFF), 0);
-        lv_obj_center(climate_label_target);
+        lv_obj_align(climate_label_target, LV_ALIGN_CENTER, -8, 0);
+
 
         climate_label_target_unit = lv_label_create(climate_arc_slider);
         lv_label_set_text(climate_label_target_unit, "°C");
-        lv_obj_align(climate_label_target_unit, LV_ALIGN_CENTER, 36, -13);
+        lv_obj_align(climate_label_target_unit, LV_ALIGN_CENTER, 28, -13);
         lv_obj_set_style_text_font(climate_label_target_unit, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(climate_label_target_unit, lv_color_hex(0xFFFFFF), 0);
         // lv_obj_center(climate_label_target_unit);
 
         climate_label_target_decimal = lv_label_create(climate_arc_slider);
         lv_label_set_text(climate_label_target_decimal, ",2");
-        lv_obj_align(climate_label_target_decimal, LV_ALIGN_CENTER, 36, 13);
+        lv_obj_align(climate_label_target_decimal, LV_ALIGN_CENTER, 28, 13);
         lv_obj_set_style_text_font(climate_label_target_decimal, &lv_font_montserrat_14, 0);
         lv_obj_set_style_text_color(climate_label_target_decimal, lv_color_hex(0xFFFFFF), 0);
         // lv_obj_center(climate_label_target_decimal);
@@ -628,7 +728,6 @@ namespace CloudMouse::App::Ui
         lv_obj_set_flex_flow(btn_container, LV_FLEX_FLOW_COLUMN_WRAP);
         lv_obj_set_flex_align(btn_container, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_set_scrollbar_mode(btn_container, LV_SCROLLBAR_MODE_OFF);
-
 
         // Bottone ON
         climate_btn_on = lv_button_create(btn_container);
@@ -664,6 +763,21 @@ namespace CloudMouse::App::Ui
     {
         APP_LOGGER("Showing climate detail for: %s", entityId.c_str());
 
+        auto entity = AppStore::instance().getEntity(entityId);
+        
+        lv_label_set_text(header_label, entity->getFriendlyName());
+        
+        float target = entity->getAttribute("temperature");
+        int current = entity->getAttribute("current_temperature");
+        const char *state = entity->getAttribute("hvac_action");
+
+        // set currentTargetValue to be managed by ENCODER_ROTATIONS events
+        currentTargetValue = target * 10;
+
+        int integer = target * 10;
+        int parte_intera = integer / 10;
+        int parte_decimale = integer % 10;
+
         climate_arc_editing = false;
 
         // Pulisci gruppo e ri-aggiungi solo gli oggetti di questa screen
@@ -673,11 +787,12 @@ namespace CloudMouse::App::Ui
         lv_group_add_obj(encoder_group, climate_btn_off);
 
         // TODO: fetch data from Home Assistant per entityId
-        lv_arc_set_value(climate_arc_slider, 210);
-        lv_label_set_text(climate_label_target, "21");
-        lv_label_set_text(climate_label_state, "Idle");
-        lv_label_set_text(climate_label_current, "22°C");
-        
+        lv_arc_set_value(climate_arc_slider, target * 10);
+        lv_label_set_text_fmt(climate_label_target, "%d", parte_intera);
+        lv_label_set_text_fmt(climate_label_target_decimal, ".%d", parte_decimale);
+        lv_label_set_text(climate_label_state, state);
+        lv_label_set_text_fmt(climate_label_current, "%d°C", current);
+
         lv_screen_load(screen_climate_detail);
 
         lv_group_focus_obj(climate_btn_on);
@@ -685,6 +800,58 @@ namespace CloudMouse::App::Ui
         lv_group_focus_obj(climate_btn_on);
 
         lv_group_focus_obj(NULL);
+    }
+
+    // =========================================================
+    // Helpers methods
+    // =========================================================
+
+    // Add this helper method to your HomeAssistantDisplayManager class
+
+    void HomeAssistantDisplayManager::updateEntityItem(const String& entityId)
+    {
+        APP_LOGGER("Updating entity item: %s", entityId.c_str());
+        
+        // Get updated data from store
+        auto entityData = AppStore::instance().getEntity(entityId);
+        if (!entityData) {
+            APP_LOGGER("⚠️ Entity not found in store: %s", entityId.c_str());
+            return;
+        }
+        
+        // Find the item in the list by iterating children
+        uint32_t child_count = lv_obj_get_child_count(entity_list_container);
+        
+        for (uint32_t i = 0; i < child_count; i++) {
+            lv_obj_t* item = lv_obj_get_child(entity_list_container, i);
+            
+            // Check if this is the right item by comparing user_data
+            const char* stored_id = (const char*)lv_obj_get_user_data(item);
+            if (stored_id && entityId.equals(stored_id)) {
+                // Found it! Update the state label
+                updateStateLabel(item, entityData);
+                APP_LOGGER("✅ Updated entity item: %s", entityId.c_str());
+                return;
+            }
+        }
+        
+        APP_LOGGER("⚠️ Entity item not found in list: %s", entityId.c_str());
+    }
+
+    // Helper to update just the state label
+    void HomeAssistantDisplayManager::updateStateLabel(lv_obj_t* item, std::shared_ptr<HomeAssistantEntity> entityData)
+    {
+        // Find the state label (it's the second child, aligned right)
+        uint32_t child_count = lv_obj_get_child_count(item);
+        
+        if (child_count >= 2) {
+            lv_obj_t* state_label = lv_obj_get_child(item, 1); // Second child
+            const char* state = entityData->getState();
+            
+            if (state) {
+                lv_label_set_text(state_label, state);
+            }
+        }
     }
 
 }

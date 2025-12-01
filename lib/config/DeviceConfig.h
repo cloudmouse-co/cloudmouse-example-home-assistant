@@ -265,7 +265,7 @@ namespace CloudMouse
  * if `true` SDK_LOGGER("") logging is enabled with [SDK] namespace
  * if `false` or not defined, SDK_LOGGER("") is disabled.
  */
-#define SDK_DEBUGGER_ACTIVE true
+#define SDK_DEBUGGER_ACTIVE false
 
 // ============================================================================
 // CONFIGURATION VALIDATION

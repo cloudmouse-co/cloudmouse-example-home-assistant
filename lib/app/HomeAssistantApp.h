@@ -47,6 +47,11 @@ namespace CloudMouse::App
         ENCODER_ROTATION = 30,
         ENCODER_CLICK = 31,
         ENCODER_LONG_PRESS = 32,
+
+        FETCH_ENTITY_STATUS = 40,
+        CALL_SWITCH_ON_SERVICE = 41,
+        CALL_SWITCH_OFF_SERVICE = 42,
+        ENTITY_UPDATED = 43,
     };
 
     struct AppEventData
@@ -73,6 +78,57 @@ namespace CloudMouse::App
             strncpy(evt.stringData, message, sizeof(evt.stringData) - 1);
             evt.value = errorCode;
             return evt;
+        }
+
+        static AppEventData fetchEntityStatus(const char *entity_id)
+        {
+            AppEventData evt = AppEventData::event(AppEventType::FETCH_ENTITY_STATUS);
+            evt.setStringData(entity_id);
+            return evt;
+        }
+
+        static AppEventData entityUpdated(const String &entity_id)
+        {
+            AppEventData evt = AppEventData::event(AppEventType::ENTITY_UPDATED);
+            evt.setStringData(entity_id);
+            return evt;
+        }
+
+        static AppEventData callSwitchOn(const String &entity_id)
+        {
+            AppEventData evt = AppEventData::event(AppEventType::CALL_SWITCH_ON_SERVICE);
+            evt.setStringData(entity_id);
+            return evt;
+        }
+
+        static AppEventData callSwitchOff(const String &entity_id)
+        {
+            AppEventData evt = AppEventData::event(AppEventType::CALL_SWITCH_OFF_SERVICE);
+            evt.setStringData(entity_id);
+            return evt;
+        }
+
+        /**
+         * Set string payload with automatic truncation and null termination
+         * Safely copies string data with bounds checking to prevent buffer overflow
+         *
+         * @param str String data to store (will be truncated if > 255 characters)
+         */
+        void setStringData(const String &str)
+        {
+            strncpy(stringData, str.c_str(), sizeof(stringData) - 1);
+            stringData[sizeof(stringData) - 1] = '\0'; // Ensure null termination
+        }
+
+        /**
+         * Get string payload as Arduino String object
+         * Safe accessor that always returns valid string (empty if unset)
+         *
+         * @return String object containing current string data
+         */
+        String getStringData() const
+        {
+            return String(stringData);
         }
     };
 
