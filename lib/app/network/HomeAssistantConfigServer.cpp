@@ -1,6 +1,7 @@
 #include "./HomeAssistantConfigServer.h"
 #include "../core/EventBus.h"
 #include "../HomeAssistantApp.h"
+#include "../utils/HomeAssistantUtils.h"
 #include <WiFi.h>
 
 namespace CloudMouse::App::Network
@@ -294,6 +295,9 @@ namespace CloudMouse::App::Network
         for (JsonObject entity : entities)
         {
             String entityId = entity["entity_id"].as<String>();
+            if ( ! isValidEntity(entityId)) {
+                continue;
+            }
             String state = entity["state"].as<String>();
             String friendlyName = entity["attributes"]["friendly_name"].as<String>();
 

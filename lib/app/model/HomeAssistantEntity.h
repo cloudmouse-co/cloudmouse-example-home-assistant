@@ -8,12 +8,25 @@ namespace CloudMouse::App
     class HomeAssistantEntity
     {
     private:
-        JsonDocument doc; // ArduinoJson handles PSRAM automatically
+        JsonDocument* doc;  // Pointer instead of direct object
 
     public:
+        HomeAssistantEntity() {
+            // Allocate JsonDocument in PSRAM
+            doc = (JsonDocument*)ps_malloc(sizeof(JsonDocument));
+            new (doc) JsonDocument();  // Placement new
+        }
+
+        ~HomeAssistantEntity() {
+            if (doc) {
+                doc->~JsonDocument();  // Manual destructor
+                free(doc);
+            }
+        }
+
         bool parse(const String &payload)
         {
-            DeserializationError error = deserializeJson(doc, payload);
+            DeserializationError error = deserializeJson(*doc, payload);
             if (error)
             {
                 APP_LOGGER("JSON parse failed: %s", error.c_str());
@@ -22,20 +35,18 @@ namespace CloudMouse::App
             return true;
         }
 
-        // Easy accessors for your climate entity
-        const char *getEntityId() { return doc["entity_id"]; }
-        const char *getState() { return doc["state"]; }
-        const char *getFriendlyName() { return doc["attributes"]["friendly_name"]; }
+        const char *getEntityId() { return (*doc)["entity_id"]; }
+        const char *getState() { return (*doc)["state"]; }
+        const char *getFriendlyName() { return (*doc)["attributes"]["friendly_name"]; }
 
         JsonVariant getAttributes()
         {
-            return doc["attributes"];
+            return (*doc)["attributes"];
         }
 
-        // Bonus: direct attribute access helper
         JsonVariant getAttribute(const char *key)
         {
-            return doc["attributes"][key];
+            return (*doc)["attributes"][key];
         }
     };
 }

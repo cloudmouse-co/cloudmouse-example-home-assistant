@@ -54,12 +54,12 @@ namespace CloudMouse::App::Services
 
             if (success)
             {
-                String payload = http.getString();
+                // String payload = http.getString();
                 APP_LOGGER("✅ HA call successful");
-                APP_LOGGER("Payload received: %s", payload.c_str());
+                // APP_LOGGER("Payload received: %s", payload.c_str());
 
-                AppStore::instance().setEntity(entityId, payload);
-                CloudMouse::EventBus::instance().sendToUI(toSDKEvent(AppEventData::entityUpdated(entityId)));
+                // AppStore::instance().setEntity(entityId, payload);
+                // CloudMouse::EventBus::instance().sendToUI(toSDKEvent(AppEventData::entityUpdated(entityId)));
             }
             else
             {

@@ -10,7 +10,11 @@
 
 namespace CloudMouse::App
 {
+    class HomeAssistantWebSocketClient;
+}
 
+namespace CloudMouse::App
+{
     using namespace CloudMouse::App::Services;
     using namespace CloudMouse::App::Network;
     using namespace CloudMouse::App::Ui;
@@ -52,6 +56,8 @@ namespace CloudMouse::App
         CALL_SWITCH_ON_SERVICE = 41,
         CALL_SWITCH_OFF_SERVICE = 42,
         ENTITY_UPDATED = 43,
+
+        DISPLAY_UPLEVEL = 50,
     };
 
     struct AppEventData
@@ -176,10 +182,13 @@ namespace CloudMouse::App
         HomeAssistantConfigServer *configServer;
         HomeAssistantPrefs *prefs;
         HomeAssistantDisplayManager *display;
+        HomeAssistantWebSocketClient *wsClient;
 
         // State management
         AppState currentState;
         AppState previousState;
+
+        bool notified = false;
 
         void processAppEvent(const AppEventData &event);
 

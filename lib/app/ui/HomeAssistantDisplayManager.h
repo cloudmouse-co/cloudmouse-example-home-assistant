@@ -45,6 +45,7 @@ namespace CloudMouse::App::Ui
 
         // screens
         lv_obj_t *screen_home;
+        lv_obj_t *screen_loading;
         lv_obj_t *screen_config_needed;
         lv_obj_t *screen_entity_list;
         lv_obj_t *screen_entity_detail;
@@ -53,7 +54,14 @@ namespace CloudMouse::App::Ui
 
         // template
         lv_obj_t *header_label;
-
+        lv_obj_t *header_list_label;
+        lv_obj_t *sidebar_btn_home;
+        lv_obj_t *sidebar_btn_light;
+        lv_obj_t *sidebar_btn_switch;
+        lv_obj_t *sidebar_btn_cover;
+        lv_obj_t *sidebar_btn_clima;
+        lv_obj_t *sidebar_btn_sensor;
+        
         // climate screen items
         lv_obj_t *climate_arc_slider;
         lv_obj_t *climate_label_state;
@@ -84,11 +92,35 @@ namespace CloudMouse::App::Ui
         static HomeAssistantDisplayManager *instance;
         HomeAssistantPrefs &prefs;
 
+        // Add filter state
+        enum class EntityFilter {
+            ALL,
+            LIGHT,
+            SWITCH,
+            CLIMA,
+            COVER,
+            SENSOR,
+        };
+        
+        EntityFilter current_filter = EntityFilter::ALL;
+        
+        // Filter colors
+        struct FilterColors {
+            uint32_t bg_color;
+            uint32_t border_color;
+        };
+        
+        FilterColors getFilterColors(EntityFilter filter);
+        void setActiveFilter(EntityFilter filter);
+        void updateSidebarStyles();
+        void updateHeaderLabel();
+
         void onDisplayEvent(const CloudMouse::Event &event);
 
         void bootstrap();
 
         void createHomeScreen();
+        void createLoadingScreen();
         void createConfigNeededScreen();
         void createEntityListScreen();
         void createEntityDetailScreen();
@@ -97,12 +129,17 @@ namespace CloudMouse::App::Ui
         void createSwitchDetailScreen();
         
         // Navigation
+        void showLoading();
         void showConfigNeeded(const String &url);
         void showEntityList();
         void showEntityDetail(int entityIndex);
         void showClimateDetail(const String &entityId);
         void showSwitchDetail(const String &entityId);
 
+        void focusSidebar();
+        void focusEntityList();
+
+        // Data hidratation
         void populateEntityList();
 
         // Helpers

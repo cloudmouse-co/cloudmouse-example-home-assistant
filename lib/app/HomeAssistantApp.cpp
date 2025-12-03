@@ -1,5 +1,8 @@
 #include "HomeAssistantApp.h"
+#include "./network/HomeAssistantWebSocketClient.h"
+#include "./model/HomeAssistantAppStore.h"
 #include "../utils/Logger.h"
+#include "utils/HomeAssistantUtils.h"
 
 namespace CloudMouse::App
 {
@@ -57,9 +60,6 @@ namespace CloudMouse::App
 
     void HomeAssistantApp::processSDKEvent(const CloudMouse::Event &event)
     {
-
-        APP_LOGGER("is app event: %s - for event %d", isAppEvent(event) ? "TRUE" : "FALSE", event.type);
-
         if (isAppEvent(event))
         {
             processAppEvent(toAppEvent(event));
@@ -75,6 +75,19 @@ namespace CloudMouse::App
             changeState(AppState::WIFI_LOST);
             break;
 
+        case CloudMouse::EventType::ENCODER_PRESS_TIME:
+            APP_LOGGER("ENCODER PRESS TIME: %d", event.value);
+            if (500 <= event.value && !notified) {
+                notified = true;
+                notifyDisplay(AppEventData::event(AppEventType::DISPLAY_UPLEVEL));
+            }
+            break;
+
+        case CloudMouse::EventType::ENCODER_BUTTON_RELEASED:
+            APP_LOGGER("ENCODER BUTTON RELEASED TIME: %d", event.value);
+            notified = false;
+            break;
+
         default:
             break;
         }
@@ -82,7 +95,6 @@ namespace CloudMouse::App
 
     void HomeAssistantApp::processAppEvent(const AppEventData &event)
     {
-        APP_LOGGER("processing APP event inside orchestrator: %d", event.type);
         switch (event.type)
         {
         case AppEventType::FETCH_ENTITY_STATUS:
@@ -182,6 +194,30 @@ namespace CloudMouse::App
             }
             APP_LOGGER("✅ Data service initialized");
 
+            notifyDisplay(AppEventData::event(AppEventType::SHOW_LOADING));
+
+            String host = prefs->getHost();
+
+            wsClient = new HomeAssistantWebSocketClient(
+                "192.168.1.129",
+                8123,
+                prefs->getApiKey());
+
+            wsClient->setOnConnected([this]()
+                                     { APP_LOGGER("HA WebSocket ready"); });
+
+            wsClient->setOnStateChanged([this](const String &entityId, const String &stateJson)
+                                        {
+                if (isValidEntity(entityId)) {
+                    Core::instance().getLEDManager()->flashColor(153,23,80, 255, 200);
+                    AppStore::instance().setEntity(entityId, stateJson);
+                    EventBus::instance().sendToUI(
+                        toSDKEvent(AppEventData::entityUpdated(entityId.c_str()))
+                    );
+                } });
+
+            wsClient->begin();
+
             String entitiesJson = prefs->getSelectedEntities();
             JsonDocument doc;
             DeserializationError error = deserializeJson(doc, entitiesJson);
@@ -193,7 +229,6 @@ namespace CloudMouse::App
                 JsonObject entity = entities[i];
                 String entityId = entity["entity_id"].as<String>();
                 dataService->fetchEntityStatus(entityId);
-                delay(100);
             }
 
             changeState(AppState::READY);
@@ -202,7 +237,6 @@ namespace CloudMouse::App
 
     void HomeAssistantApp::notifyDisplay(const AppEventData &eventData)
     {
-        APP_LOGGER("Sending event from App Orchstrator->notifyDisplay()");
         CloudMouse::EventBus::instance().sendToUI(toSDKEvent(eventData));
     }
 
@@ -224,6 +258,8 @@ namespace CloudMouse::App
 
         if (currentState != AppState::READY)
         {
+            notifyDisplay(AppEventData::event(AppEventType::SHOW_LOADING));
+
             String entitiesJson = prefs->getSelectedEntities();
             JsonDocument doc;
             DeserializationError error = deserializeJson(doc, entitiesJson);
@@ -235,7 +271,6 @@ namespace CloudMouse::App
                 JsonObject entity = entities[i];
                 String entityId = entity["entity_id"].as<String>();
                 dataService->fetchEntityStatus(entityId);
-                delay(100);
             }
 
             changeState(AppState::READY);
