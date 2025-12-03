@@ -256,6 +256,16 @@ namespace CloudMouse::Hardware
          */
         int getLastPressDuration() const;
 
+        /**
+         * Reset press duration
+         *
+         * @return true if button press time is reset, false otherwise
+         *
+         * Usage Examples:
+         * - Dynamic UI: UI reactions during a press time should reset timing when event is consumed
+         */
+        bool resetLastPressDuration();
+
     private:
         // ========================================================================
         // HARDWARE INTERFACE
