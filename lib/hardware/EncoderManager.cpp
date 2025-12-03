@@ -290,6 +290,17 @@ namespace CloudMouse::Hardware
         return lastPressDuration;
     }
 
+    bool EncoderManager::resetLastPressDuration()
+    {
+        if (lastPressDuration > 0)
+        {
+            lastPressDuration = 0;
+            return true;
+        }
+
+        return false;
+    }
+
     // ============================================================================
     // INTERNAL HELPER METHODS
     // ============================================================================

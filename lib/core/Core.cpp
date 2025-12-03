@@ -458,6 +458,7 @@ namespace CloudMouse
         int pressDuration = encoder->getLastPressDuration();
         if (pressDuration != 0)
         {
+          encoder->resetLastPressDuration();
           Event buttonReleasedEvent(EventType::ENCODER_BUTTON_RELEASED, pressDuration);
           EventBus::instance().sendToMain(buttonReleasedEvent);
         }
