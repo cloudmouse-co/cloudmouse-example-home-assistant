@@ -249,7 +249,7 @@ namespace CloudMouse
  * Applications:
  * - Used for checking animations and UI performance
  */
-#define SHOW_LVGL_PERFORMANCE_MONITOR true
+#define SHOW_LVGL_PERFORMANCE_MONITOR false
 
 /**
  * APP logging flag
