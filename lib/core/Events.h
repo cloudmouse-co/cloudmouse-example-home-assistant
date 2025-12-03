@@ -87,6 +87,13 @@ enum class EventType {
      * Usage: Context menus, settings access, power functions
      */
     ENCODER_LONG_PRESS,
+
+    /**
+     * Rotary encoder button is holding down
+     * value: Press duration in milliseconds
+     * Usage: Context menus, settings access, power functions
+     */
+    ENCODER_PRESS_TIME,
     
     // ========================================================================
     // DISPLAY CONTROL EVENTS

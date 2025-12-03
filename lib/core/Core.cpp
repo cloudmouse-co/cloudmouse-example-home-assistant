@@ -447,6 +447,13 @@ namespace CloudMouse
           Event longPressEvent(EventType::ENCODER_LONG_PRESS);
           EventBus::instance().sendToMain(longPressEvent);
         }
+
+        int pressTime = encoder->getPressTime();
+        if (pressTime != 0)
+        {
+          Event pressTimeEvent(EventType::ENCODER_PRESS_TIME, pressTime);
+          EventBus::instance().sendToMain(pressTimeEvent);
+        }
       }
 
       // Update display rendering
