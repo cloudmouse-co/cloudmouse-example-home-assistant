@@ -198,7 +198,6 @@ namespace CloudMouse::Hardware
                 rainbow = event.state;
                 if (rainbow)
                 {
-                    // Quando l'arcobaleno inizia, ferma tutto il resto
                     pulsating = false;
                     fading = false;
                     loading = false;
@@ -206,12 +205,16 @@ namespace CloudMouse::Hardware
                 }
                 else
                 {
-                    // Quando l'arcobaleno finisce, torna al colore base
                     setAllLEDs(baseRed, baseGreen, baseBlue);
                     strip.show();
-                    // Potresti voler far tornare in stato di 'pulsating'
                     pulsating = true;
                 }
+                break;
+
+            case LEDEventType::SET_BRIGHTNESS:
+                currentBrightness = event.brightness;
+
+                strip.setBrightness(currentBrightness);
                 break;
 
             default:
@@ -438,9 +441,8 @@ namespace CloudMouse::Hardware
 
     void LEDManager::updateRainbowAnimation()
     {
-        // Variabile statica per il timing del movimento dell'arcobaleno
         static unsigned long lastRainbowUpdate = 0;
-        const uint8_t RAINBOW_SPEED_MS = 20; // 20ms tra ogni frame
+        const uint8_t RAINBOW_SPEED_MS = 20;
 
         if (millis() - lastRainbowUpdate >= RAINBOW_SPEED_MS)
         {
@@ -448,20 +450,20 @@ namespace CloudMouse::Hardware
 
             for (int i = 0; i < NUM_LEDS; i++)
             {
-                // La formula chiave per l'arcobaleno scorrevole:
-                // Combina la posizione del LED (i) e la posizione corrente di scorrimento (rainbowPosition)
-                // L'offset assicura che il colore di ogni LED sia leggermente diverso
+                // The key formula for the scrolling rainbow:
+                // Combines the LED position (i) and the current scrolling position (rainbowPosition)
+                // The offset ensures that each LED's color is slightly different
                 uint32_t color = Wheel(((i * 256 / NUM_LEDS) + rainbowPosition) & 255);
                 strip.setPixelColor(i, color);
             }
 
             strip.show();
 
-            // Incrementa la posizione per il prossimo ciclo, creando l'effetto di scorrimento
+            // Increase the position for the next loop, creating the scrolling effect
             rainbowPosition++;
             if (rainbowPosition > 255)
             {
-                rainbowPosition = 0; // Riparti da capo
+                rainbowPosition = 0;
             }
         }
     }
@@ -483,9 +485,17 @@ namespace CloudMouse::Hardware
         LEDEvent event;
         event.type = LEDEventType::SET_RAINBOW;
         event.state = on;
-        // Il parametro wait_ms non viene usato nell'evento, ma è utile
-        // per documentare la velocità desiderata (che è fissa in updateRainbowAnimation)
+        
         sendLEDEvent(event);
+    }
+
+    void LEDManager::setBrightness(int brightness)
+    {
+        LEDEvent setBrightness;
+        setBrightness.type = LEDEventType::SET_BRIGHTNESS;
+        setBrightness.brightness = 25;
+
+        sendLEDEvent(setBrightness);
     }
 
     void LEDManager::flashColor(uint8_t r, uint8_t g, uint8_t b, int brightness, int duration)

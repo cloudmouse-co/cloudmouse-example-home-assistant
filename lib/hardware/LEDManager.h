@@ -32,7 +32,7 @@ namespace CloudMouse::Hardware
         ACTIVATE,      // Activate LEDs on user interaction
         SET_COLOR,     // Change base color theme
         SET_BRIGHTNESS, // Adjust global brightness
-        SET_RAINBOW
+        SET_RAINBOW     // Set rainbow animation
     };
 
     /**
@@ -79,6 +79,7 @@ namespace CloudMouse::Hardware
         void activate();                                 // Trigger activation animation
         void updateLastEncoderMovementTime();            // Update activity timestamp
         void setMainColor(const String &colorName = ""); // Set color theme
+        void setBrightness(int brightness = 200);
 
         // State queries
         bool isLoading() const { return loading; }
