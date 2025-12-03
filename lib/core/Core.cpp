@@ -454,6 +454,13 @@ namespace CloudMouse
           Event pressTimeEvent(EventType::ENCODER_PRESS_TIME, pressTime);
           EventBus::instance().sendToMain(pressTimeEvent);
         }
+
+        int pressDuration = encoder->getLastPressDuration();
+        if (pressDuration != 0)
+        {
+          Event buttonReleasedEvent(EventType::ENCODER_BUTTON_RELEASED, pressDuration);
+          EventBus::instance().sendToMain(buttonReleasedEvent);
+        }
       }
 
       // Update display rendering

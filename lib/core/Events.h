@@ -94,6 +94,13 @@ enum class EventType {
      * Usage: Context menus, settings access, power functions
      */
     ENCODER_PRESS_TIME,
+
+    /**
+     * Rotary encoder button is released
+     * value: Last press duration in milliseconds
+     * Usage: Managing user interaction timing
+     */
+    ENCODER_BUTTON_RELEASED
     
     // ========================================================================
     // DISPLAY CONTROL EVENTS
