@@ -45,7 +45,7 @@ namespace CloudMouse::App::Ui
         }
 
         createHomeScreen();
-        createMainScreen();
+        // createMainScreen();
         createLoadingScreen();
         createConfigNeededScreen();
         createEntityListScreen();
