@@ -54,6 +54,10 @@ namespace CloudMouse::App::Ui
     private:
         lv_group_t *encoder_group;
 
+        // template
+        lv_obj_t *screen_main;
+        lv_obj_t *content_container;
+
         // screens
         lv_obj_t *screen_home;
         lv_obj_t *screen_loading;
@@ -88,6 +92,7 @@ namespace CloudMouse::App::Ui
         // switch screen items
         lv_obj_t *switch_btn_on;
         lv_obj_t *switch_btn_off;
+        lv_obj_t *switch_status_icon;
 
         // Entity list items
         lv_obj_t *entity_list_container;
@@ -131,6 +136,7 @@ namespace CloudMouse::App::Ui
         void bootstrap();
 
         void createHomeScreen();
+        void createMainScreen();
         void createLoadingScreen();
         void createConfigNeededScreen();
         void createEntityListScreen();

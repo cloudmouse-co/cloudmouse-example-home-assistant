@@ -45,6 +45,7 @@ namespace CloudMouse::App::Ui
         }
 
         createHomeScreen();
+        createMainScreen();
         createLoadingScreen();
         createConfigNeededScreen();
         createEntityListScreen();
@@ -407,6 +408,182 @@ namespace CloudMouse::App::Ui
     // SCREEN 2: ENTITY LIST
     // ============================================================================
 
+    void HomeAssistantDisplayManager::createMainScreen()
+    {
+        screen_main = lv_obj_create(NULL);
+        lv_obj_set_style_bg_color(screen_entity_list, lv_color_hex(0x000000), 0);
+
+        // createHeader(screen_entity_list, "Entities");
+
+        // SIDEBAR
+        lv_obj_t *sidebar_container = lv_obj_create(screen_entity_list);
+        lv_obj_set_size(sidebar_container, 76, 320);
+        lv_obj_align(sidebar_container, LV_ALIGN_TOP_LEFT, 0, 0);
+        lv_obj_set_style_bg_color(sidebar_container, lv_color_hex(0x000000), 0);
+        lv_obj_set_style_border_width(sidebar_container, 0, 0);
+        lv_obj_set_style_pad_all(sidebar_container, 5, 0);
+        lv_obj_set_flex_flow(sidebar_container, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_scrollbar_mode(sidebar_container, LV_SCROLLBAR_MODE_OFF);
+
+        sidebar_btn_home = lv_button_create(sidebar_container);
+        lv_obj_set_size(sidebar_btn_home, 54, 54);
+        lv_obj_align(sidebar_btn_home, LV_ALIGN_CENTER, 5, 0);
+        lv_obj_set_style_bg_color(sidebar_btn_home, lv_color_hex(0x0d6079), 0);
+        lv_obj_set_style_shadow_width(sidebar_btn_home, 0, LV_PART_MAIN);
+        lv_obj_set_style_radius(sidebar_btn_home, LV_RADIUS_CIRCLE, LV_PART_MAIN);
+        lv_obj_add_flag(sidebar_btn_home, LV_OBJ_FLAG_CLICKABLE);
+
+        // lv_obj_set_style_bg_color(sidebar_btn_home, lv_color_hex(0x535353), LV_STATE_FOCUSED);
+
+        lv_obj_add_event_cb(sidebar_btn_home, [](lv_event_t *e)
+                            {
+        auto *manager = (HomeAssistantDisplayManager*)lv_event_get_user_data(e);
+        manager->setActiveFilter(EntityFilter::ALL); }, LV_EVENT_CLICKED, this);
+
+        lv_obj_t *label_home = lv_label_create(sidebar_btn_home);
+        lv_label_set_text(label_home, LV_SYMBOL_HOME);
+        lv_obj_set_style_text_color(label_home, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_set_style_text_font(label_home, &lv_font_montserrat_24, 0);
+        lv_obj_center(label_home);
+
+        sidebar_btn_light = lv_button_create(sidebar_container);
+        lv_obj_set_size(sidebar_btn_light, 54, 54);
+        lv_obj_align(sidebar_btn_light, LV_ALIGN_CENTER, 64, 0);
+        // lv_obj_set_style_bg_color(sidebar_btn_light, lv_color_hex(0x8936ec), 0);
+        lv_obj_set_style_bg_color(sidebar_btn_light, lv_color_hex(0x323232), 0);
+        lv_obj_set_style_shadow_width(sidebar_btn_light, 0, LV_PART_MAIN);
+        lv_obj_set_style_radius(sidebar_btn_light, LV_RADIUS_CIRCLE, LV_PART_MAIN);
+        lv_obj_add_flag(sidebar_btn_light, LV_OBJ_FLAG_CLICKABLE);
+        // lv_obj_set_style_bg_color(sidebar_btn_light, lv_color_hex(0x535353), LV_STATE_FOCUSED);
+
+        lv_obj_add_event_cb(sidebar_btn_light, [](lv_event_t *e)
+                            {
+        auto *manager = (HomeAssistantDisplayManager*)lv_event_get_user_data(e);
+        manager->setActiveFilter(EntityFilter::LIGHT); }, LV_EVENT_CLICKED, this);
+
+        lv_obj_t *label_light = lv_label_create(sidebar_btn_light);
+        lv_label_set_text(label_light, FA_ICON_LIGHT);
+        lv_obj_set_style_text_font(label_light, &font_awesome_solid_20, 0);
+        lv_obj_set_style_text_color(label_light, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_center(label_light);
+
+        sidebar_btn_switch = lv_button_create(sidebar_container);
+        lv_obj_set_size(sidebar_btn_switch, 54, 54);
+        lv_obj_align(sidebar_btn_switch, LV_ALIGN_CENTER, 128, 0);
+        // lv_obj_set_style_bg_color(sidebar_btn_switch, lv_color_hex(0x4b57f8), 0);
+        lv_obj_set_style_bg_color(sidebar_btn_switch, lv_color_hex(0x323232), 0);
+        lv_obj_set_style_shadow_width(sidebar_btn_switch, 0, LV_PART_MAIN);
+        lv_obj_set_style_radius(sidebar_btn_switch, LV_RADIUS_CIRCLE, LV_PART_MAIN);
+        lv_obj_add_flag(sidebar_btn_switch, LV_OBJ_FLAG_CLICKABLE);
+        // lv_obj_set_style_bg_color(sidebar_btn_switch, lv_color_hex(0x535353), LV_STATE_FOCUSED);
+
+        lv_obj_add_event_cb(sidebar_btn_switch, [](lv_event_t *e)
+                            {
+        auto *manager = (HomeAssistantDisplayManager*)lv_event_get_user_data(e);
+        manager->setActiveFilter(EntityFilter::SWITCH); }, LV_EVENT_CLICKED, this);
+
+        lv_obj_t *label_switch = lv_label_create(sidebar_btn_switch);
+        lv_label_set_text(label_switch, FA_ICON_SWITCH);
+        lv_obj_set_style_text_color(label_switch, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_set_style_text_font(label_switch, &font_awesome_solid_20, 0);
+        lv_obj_center(label_switch);
+
+        sidebar_btn_clima = lv_button_create(sidebar_container);
+        lv_obj_set_size(sidebar_btn_clima, 54, 54);
+        lv_obj_align(sidebar_btn_clima, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_set_style_bg_color(sidebar_btn_clima, lv_color_hex(0x323232), 0);
+        lv_obj_set_style_shadow_width(sidebar_btn_clima, 0, LV_PART_MAIN);
+        lv_obj_set_style_radius(sidebar_btn_clima, LV_RADIUS_CIRCLE, LV_PART_MAIN);
+        lv_obj_add_flag(sidebar_btn_clima, LV_OBJ_FLAG_CLICKABLE);
+
+        // lv_obj_set_style_bg_color(sidebar_btn_home, lv_color_hex(0x535353), LV_STATE_FOCUSED);
+
+        lv_obj_add_event_cb(sidebar_btn_clima, [](lv_event_t *e)
+                            {
+        auto *manager = (HomeAssistantDisplayManager*)lv_event_get_user_data(e);
+        manager->setActiveFilter(EntityFilter::CLIMA); }, LV_EVENT_CLICKED, this);
+
+        lv_obj_t *label_clima = lv_label_create(sidebar_btn_clima);
+        lv_label_set_text(label_clima, FA_ICON_CLIMATE);
+        lv_obj_set_style_text_color(label_clima, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_set_style_text_font(label_clima, &font_awesome_solid_20, 0);
+        lv_obj_center(label_clima);
+
+        sidebar_btn_cover = lv_button_create(sidebar_container);
+        lv_obj_set_size(sidebar_btn_cover, 54, 54);
+        lv_obj_align(sidebar_btn_cover, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_set_style_bg_color(sidebar_btn_cover, lv_color_hex(0x323232), 0);
+        lv_obj_set_style_shadow_width(sidebar_btn_cover, 0, LV_PART_MAIN);
+        lv_obj_set_style_radius(sidebar_btn_cover, LV_RADIUS_CIRCLE, LV_PART_MAIN);
+        lv_obj_add_flag(sidebar_btn_cover, LV_OBJ_FLAG_CLICKABLE);
+
+        // lv_obj_set_style_bg_color(sidebar_btn_home, lv_color_hex(0x535353), LV_STATE_FOCUSED);
+
+        lv_obj_add_event_cb(sidebar_btn_cover, [](lv_event_t *e)
+                            {
+        auto *manager = (HomeAssistantDisplayManager*)lv_event_get_user_data(e);
+        manager->setActiveFilter(EntityFilter::COVER); }, LV_EVENT_CLICKED, this);
+
+        lv_obj_t *label_cover = lv_label_create(sidebar_btn_cover);
+        lv_label_set_text(label_cover, FA_ICON_COVER);
+        lv_obj_set_style_text_color(label_cover, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_set_style_text_font(label_cover, &font_awesome_solid_20, 0);
+        lv_obj_center(label_cover);
+
+        sidebar_btn_sensor = lv_button_create(sidebar_container);
+        lv_obj_set_size(sidebar_btn_sensor, 54, 54);
+        lv_obj_align(sidebar_btn_sensor, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_set_style_bg_color(sidebar_btn_sensor, lv_color_hex(0x323232), 0);
+        lv_obj_set_style_shadow_width(sidebar_btn_sensor, 0, LV_PART_MAIN);
+        lv_obj_set_style_radius(sidebar_btn_sensor, LV_RADIUS_CIRCLE, LV_PART_MAIN);
+        lv_obj_add_flag(sidebar_btn_sensor, LV_OBJ_FLAG_CLICKABLE);
+
+        // lv_obj_set_style_bg_color(sidebar_btn_home, lv_color_hex(0x535353), LV_STATE_FOCUSED);
+
+        lv_obj_add_event_cb(sidebar_btn_sensor, [](lv_event_t *e)
+                            {
+        auto *manager = (HomeAssistantDisplayManager*)lv_event_get_user_data(e);
+        manager->setActiveFilter(EntityFilter::SENSOR); }, LV_EVENT_CLICKED, this);
+
+        lv_obj_t *label_sensor = lv_label_create(sidebar_btn_sensor);
+        lv_label_set_text(label_sensor, FA_ICON_SENSOR);
+        lv_obj_set_style_text_color(label_sensor, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_set_style_text_font(label_sensor, &font_awesome_solid_20, 0);
+        lv_obj_center(label_sensor);
+
+        // HEADER
+        lv_obj_t *header_container = lv_obj_create(screen_entity_list);
+        lv_obj_set_size(header_container, 404, 40);
+        lv_obj_align(header_container, LV_ALIGN_TOP_RIGHT, 0, 0);
+        lv_obj_set_style_bg_color(header_container, lv_color_hex(0x000000), 0);
+        lv_obj_set_style_border_width(header_container, 0, 0);
+        lv_obj_set_style_pad_all(header_container, 5, 0);
+        lv_obj_set_flex_flow(header_container, LV_FLEX_FLOW_ROW);
+        lv_obj_set_scrollbar_mode(header_container, LV_SCROLLBAR_MODE_OFF);
+
+        header_list_label = lv_label_create(header_container);
+        lv_label_set_text(header_list_label, LV_SYMBOL_HOME "  Home Assistant");
+        lv_obj_set_style_text_color(header_list_label, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_set_style_text_font(header_list_label, &lv_font_montserrat_14, 0);
+        lv_obj_align(header_list_label, LV_ALIGN_TOP_LEFT, 0, 0);
+        lv_obj_set_style_pad_top(header_list_label, 8, 0);
+
+        // Container vuoto
+        content_container = lv_obj_create(screen_entity_list);
+        lv_obj_set_size(content_container, 404, 280);
+        lv_obj_align(content_container, LV_ALIGN_TOP_RIGHT, 0, 40);
+        lv_obj_set_style_bg_color(content_container, lv_color_hex(0x000000), 0);
+        lv_obj_set_style_border_width(content_container, 0, 0);
+        lv_obj_set_style_pad_all(content_container, 5, 0);
+        // lv_obj_set_flex_flow(content_container, LV_FLEX_FLOW_COLUMN);
+        // lv_obj_set_scrollbar_mode(content_container, LV_SCROLLBAR_MODE_AUTO);
+
+        lv_obj_add_flag(content_container, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_remove_flag(content_container, LV_OBJ_FLAG_SCROLL_MOMENTUM);
+
+        APP_LOGGER("✅ main screen created (empty)");
+    }
+
     void HomeAssistantDisplayManager::createEntityListScreen()
     {
         screen_entity_list = lv_obj_create(NULL);
@@ -726,7 +903,8 @@ namespace CloudMouse::App::Ui
                 {
                     lv_obj_set_style_bg_color(status_led, lv_color_hex(0x6f757a), 0);
                 }
-            } else if(entityId.startsWith("switch."))
+            }
+            else if (entityId.startsWith("switch."))
             {
                 lv_obj_t *status_led = lv_obj_create(item);
                 lv_obj_align(status_led, LV_ALIGN_RIGHT_MID, -45, 0);
@@ -802,18 +980,35 @@ namespace CloudMouse::App::Ui
         // Pulisci gruppo
         lv_group_remove_all_objs(encoder_group);
 
-        // Re-aggiungi tutti gli item esistenti
+        int indexToFocus = -1;
+
+        // Re-aggiungi tutti gli item esistenti e trova quello da focalizzare
         int count = lv_obj_get_child_count(entity_list_container);
         for (int i = 0; i < count; i++)
         {
             lv_obj_t *item = lv_obj_get_child(entity_list_container, i);
             lv_group_add_obj(encoder_group, item);
+
+            // Trova l'indice dell'entity corrente
+            if (!currentEntityId.isEmpty())
+            {
+                const char *entity_id = (const char *)lv_obj_get_user_data(item);
+                if (String(entity_id).equals(currentEntityId))
+                {
+                    indexToFocus = i;
+                }
+            }
         }
 
-        // ✅ Forza focus sul primo elemento (o sull'ultimo selezionato)
-        if (count > 0 && selected_entity_index < count)
+        // Focus sull'elemento trovato o sul primo
+        if (indexToFocus >= 0)
         {
-            lv_obj_t *itemToFocus = lv_obj_get_child(entity_list_container, selected_entity_index);
+            lv_obj_t *itemToFocus = lv_obj_get_child(entity_list_container, indexToFocus);
+            lv_group_focus_obj(itemToFocus);
+        }
+        else if (count > 0)
+        {
+            lv_obj_t *itemToFocus = lv_obj_get_child(entity_list_container, 0);
             lv_group_focus_obj(itemToFocus);
         }
 
@@ -868,20 +1063,32 @@ namespace CloudMouse::App::Ui
 
         createHeader(screen_switch_detail, "Entity Sensor Detail");
 
+        lv_obj_t *status_container = lv_obj_create(screen_switch_detail);
+        lv_obj_set_size(status_container, 480, 180);
+        lv_obj_align(status_container, LV_ALIGN_BOTTOM_MID, 0, -90);
+        lv_obj_set_style_bg_color(status_container, lv_color_hex(0x1a1a1a), 0);
+        lv_obj_set_style_border_width(status_container, 0, 0);
+        lv_obj_set_flex_flow(status_container, LV_FLEX_FLOW_ROW);
+        lv_obj_set_flex_align(status_container, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+        switch_status_icon = lv_label_create(status_container);
+        lv_label_set_text(switch_status_icon, LV_SYMBOL_CHARGE);
+        lv_obj_set_style_text_font(switch_status_icon, &lv_font_montserrat_48, 0);
+
         // Container placeholder
-        lv_obj_t *container = lv_obj_create(screen_switch_detail);
-        lv_obj_set_size(container, 460, 260);
-        lv_obj_align(container, LV_ALIGN_CENTER, 0, 10);
-        lv_obj_set_style_bg_color(container, lv_color_hex(0x1a1a1a), 0);
-        lv_obj_set_style_border_width(container, 2, 0);
-        lv_obj_set_style_border_color(container, lv_color_hex(0x2196F3), 0);
-        lv_obj_set_flex_flow(container, LV_FLEX_FLOW_COLUMN);
-        lv_obj_set_flex_align(container, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        lv_obj_t *button_container = lv_obj_create(screen_switch_detail);
+        lv_obj_set_size(button_container, 480, 100);
+        lv_obj_align(button_container, LV_ALIGN_BOTTOM_MID, 0, 0);
+        lv_obj_set_style_bg_color(button_container, lv_color_hex(0x1a1a1a), 0);
+        lv_obj_set_style_border_width(button_container, 0, 0);
+        lv_obj_set_flex_flow(button_container, LV_FLEX_FLOW_ROW);
+        lv_obj_set_flex_align(button_container, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
 
         // Bottone ON
-        switch_btn_on = lv_button_create(container);
-        lv_obj_set_size(switch_btn_on, 100, 100);
+        switch_btn_on = lv_button_create(button_container);
+        lv_obj_set_size(switch_btn_on, 100, 60);
         lv_obj_set_style_bg_color(switch_btn_on, lv_color_hex(0x323232), 0);
+        lv_obj_set_style_shadow_width(switch_btn_on, 0, 0);
         lv_obj_set_style_bg_color(switch_btn_on, lv_color_hex(0x525252), LV_STATE_FOCUSED);
         lv_obj_add_flag(switch_btn_on, LV_OBJ_FLAG_CLICKABLE);
 
@@ -890,9 +1097,10 @@ namespace CloudMouse::App::Ui
         lv_obj_center(label_on);
 
         // Bottone OFF
-        switch_btn_off = lv_button_create(container);
-        lv_obj_set_size(switch_btn_off, 100, 100);
+        switch_btn_off = lv_button_create(button_container);
+        lv_obj_set_size(switch_btn_off, 100, 60);
         lv_obj_set_style_bg_color(switch_btn_off, lv_color_hex(0x323232), 0);
+        lv_obj_set_style_shadow_width(switch_btn_off, 0, 0);
         lv_obj_set_style_bg_color(switch_btn_off, lv_color_hex(0x525252), LV_STATE_FOCUSED);
         lv_obj_add_flag(switch_btn_off, LV_OBJ_FLAG_CLICKABLE);
 
@@ -917,6 +1125,21 @@ namespace CloudMouse::App::Ui
         lv_group_remove_all_objs(encoder_group);
         lv_group_add_obj(encoder_group, switch_btn_on);
         lv_group_add_obj(encoder_group, switch_btn_off);
+
+        if (String(entity->getState()).equals("on"))
+        {
+            lv_obj_set_style_text_color(switch_status_icon, lv_color_hex(0xffc107), 0);
+            lv_obj_add_state(switch_btn_on, LV_STATE_DISABLED);
+            lv_obj_remove_state(switch_btn_off, LV_STATE_DISABLED);
+            lv_group_focus_obj(switch_btn_off);
+        }
+        else
+        {
+            lv_obj_set_style_text_color(switch_status_icon, lv_color_hex(0x6f757a), 0);
+            lv_obj_add_state(switch_btn_off, LV_STATE_DISABLED);
+            lv_obj_remove_state(switch_btn_on, LV_STATE_DISABLED);
+            lv_group_focus_obj(switch_btn_on);
+        }
 
         lv_screen_load(screen_switch_detail);
     }
@@ -1231,27 +1454,27 @@ namespace CloudMouse::App::Ui
         switch (current_filter)
         {
         case EntityFilter::ALL:
-            lv_label_set_text(header_list_label, /* LV_SYMBOL_HOME "   */"Home Assistant");
+            lv_label_set_text(header_list_label, /* LV_SYMBOL_HOME "   */ "Home Assistant");
             break;
 
         case EntityFilter::LIGHT:
-            lv_label_set_text(header_list_label, /* FA_ICON_LIGHT "   */"Lights");
+            lv_label_set_text(header_list_label, /* FA_ICON_LIGHT "   */ "Lights");
             break;
 
         case EntityFilter::SWITCH:
-            lv_label_set_text(header_list_label, /* FA_ICON_SWITCH "   */"Switches");
+            lv_label_set_text(header_list_label, /* FA_ICON_SWITCH "   */ "Switches");
             break;
 
         case EntityFilter::CLIMA:
-            lv_label_set_text(header_list_label, /* FA_ICON_CLIMATE "   */"Clima");
+            lv_label_set_text(header_list_label, /* FA_ICON_CLIMATE "   */ "Clima");
             break;
 
         case EntityFilter::COVER:
-            lv_label_set_text(header_list_label, /* FA_ICON_COVER "   */"Covers");
+            lv_label_set_text(header_list_label, /* FA_ICON_COVER "   */ "Covers");
             break;
 
         case EntityFilter::SENSOR:
-            lv_label_set_text(header_list_label, /* FA_ICON_SENSOR "   */"Sensors");
+            lv_label_set_text(header_list_label, /* FA_ICON_SENSOR "   */ "Sensors");
             break;
         }
 
@@ -1307,6 +1530,23 @@ namespace CloudMouse::App::Ui
             lv_label_set_text_fmt(climate_label_target_decimal, ".%d", parte_decimale);
             lv_label_set_text(climate_label_state, state);
             lv_label_set_text_fmt(climate_label_current, "%d°C", current);
+        }
+        else if (lv_screen_active() == screen_switch_detail)
+        {
+            if (String(entityData->getState()).equals("on"))
+            {
+                lv_obj_set_style_text_color(switch_status_icon, lv_color_hex(0xffc107), 0);
+                lv_obj_add_state(switch_btn_on, LV_STATE_DISABLED);
+                lv_obj_remove_state(switch_btn_off, LV_STATE_DISABLED);
+                lv_group_focus_obj(switch_btn_off);
+            }
+            else
+            {
+                lv_obj_set_style_text_color(switch_status_icon, lv_color_hex(0x6f757a), 0);
+                lv_obj_add_state(switch_btn_off, LV_STATE_DISABLED);
+                lv_obj_remove_state(switch_btn_on, LV_STATE_DISABLED);
+                lv_group_focus_obj(switch_btn_on);
+            }
         }
 
         // Find the item in the list by iterating children
