@@ -25,6 +25,8 @@ namespace CloudMouse::App::Services
         bool entranceLightOn();
         bool setSwitchOn(const String &entityId);
         bool setSwitchOff(const String &entityId);
+        bool setLightOn(const String &entityId);
+        bool setLightOff(const String &entityId);
 
         static String fetchEntityList(HomeAssistantPrefs &prefs);
 

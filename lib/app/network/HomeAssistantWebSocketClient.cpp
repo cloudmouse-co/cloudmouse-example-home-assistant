@@ -2,6 +2,7 @@
 
 #include "HomeAssistantWebSocketClient.h"
 #include "../../utils/Logger.h"
+#include "../utils/HomeAssistantUtils.h"
 
 namespace CloudMouse::App
 {
@@ -31,7 +32,7 @@ namespace CloudMouse::App
         });
 
         wsClient->setOnMessage([this](const String& payload) {
-            APP_LOGGER("WEB SOCKET MESSAGE: %s", payload);
+            // APP_LOGGER("WEB SOCKET MESSAGE: %s", payload.c_str());
             handleMessage(payload);
         });
 
@@ -122,6 +123,11 @@ namespace CloudMouse::App
     {
         JsonObject eventData = doc["event"]["data"];
         String entityId = eventData["entity_id"].as<String>();
+
+        if (!isValidEntity(entityId)) {
+            return;
+        }
+
         JsonObject newState = eventData["new_state"];
 
         if (newState.isNull()) {
@@ -132,6 +138,7 @@ namespace CloudMouse::App
         serializeJson(newState, stateJson);
 
         APP_LOGGER("State changed: %s", entityId.c_str());
+        APP_LOGGER("PAYLOAD: %s", stateJson.c_str());
 
         if (onStateChanged) {
             onStateChanged(entityId, stateJson);

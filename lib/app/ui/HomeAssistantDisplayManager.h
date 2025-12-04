@@ -28,6 +28,18 @@ namespace CloudMouse::App::Ui
     using namespace CloudMouse::App::Services;
     using namespace CloudMouse::App;
 
+    enum class ViewType
+    {
+        LOADING,
+        CONFIG_NEEDED,
+        ENTITY_LIST,
+        CLIMATE_DETAIL,
+        SWITCH_DETAIL,
+        LIGHT_DETAIL,
+        SENSOR_DETAIL,
+        COVER_DETAIL,
+    };
+    
     class HomeAssistantDisplayManager
     {
     public:
@@ -52,6 +64,17 @@ namespace CloudMouse::App::Ui
         }
 
     private:
+        ViewType current_view = ViewType::LOADING;
+
+        void renderEntityList();
+        void renderEntityDetail(const String &entityId);
+        void renderSwitchDetail(const String &entityId);
+        void renderLightDetail(const String &entityId);
+        void renderSensorDetail(const String &entityId);
+        void renderClimateDetail(const String &entityId);
+        void renderCoverDetail(const String &entityId);
+        void renderLoading();
+
         lv_group_t *encoder_group;
 
         // template
@@ -93,6 +116,19 @@ namespace CloudMouse::App::Ui
         lv_obj_t *switch_btn_on;
         lv_obj_t *switch_btn_off;
         lv_obj_t *switch_status_icon;
+
+        // light screen items
+        lv_obj_t *light_btn_on;
+        lv_obj_t *light_btn_off;
+        lv_obj_t *light_status_icon;
+
+        // sensor screen items
+        lv_obj_t *sensor_status_icon;
+
+        // cover screen items
+        lv_obj_t *cover_btn_up;
+        lv_obj_t *cover_btn_off;
+        lv_obj_t *cover_btn_dwn;
 
         // Entity list items
         lv_obj_t *entity_list_container;
@@ -149,7 +185,7 @@ namespace CloudMouse::App::Ui
         void showLoading();
         void showConfigNeeded(const String &url);
         void showEntityList();
-        void showEntityDetail(int entityIndex);
+        void showEntityDetail(const String &entityId);
         void showClimateDetail(const String &entityId);
         void showSwitchDetail(const String &entityId);
 

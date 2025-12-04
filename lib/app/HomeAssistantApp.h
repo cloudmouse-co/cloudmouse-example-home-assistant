@@ -55,7 +55,9 @@ namespace CloudMouse::App
         FETCH_ENTITY_STATUS = 40,
         CALL_SWITCH_ON_SERVICE = 41,
         CALL_SWITCH_OFF_SERVICE = 42,
-        ENTITY_UPDATED = 43,
+        CALL_LIGHT_ON_SERVICE = 43,
+        CALL_LIGHT_OFF_SERVICE = 44,
+        ENTITY_UPDATED = 45,
 
         DISPLAY_UPLEVEL = 50,
     };
@@ -114,6 +116,19 @@ namespace CloudMouse::App
             return evt;
         }
 
+        static AppEventData callLightOn(const String &entity_id)
+        {
+            AppEventData evt = AppEventData::event(AppEventType::CALL_LIGHT_ON_SERVICE);
+            evt.setStringData(entity_id);
+            return evt;
+        }
+
+        static AppEventData callLightOff(const String &entity_id)
+        {
+            AppEventData evt = AppEventData::event(AppEventType::CALL_LIGHT_OFF_SERVICE);
+            evt.setStringData(entity_id);
+            return evt;
+        }
         /**
          * Set string payload with automatic truncation and null termination
          * Safely copies string data with bounds checking to prevent buffer overflow

@@ -76,15 +76,16 @@ namespace CloudMouse::App
             break;
 
         case CloudMouse::EventType::ENCODER_PRESS_TIME:
-            APP_LOGGER("ENCODER PRESS TIME: %d", event.value);
-            if (500 <= event.value && !notified) {
+            // APP_LOGGER("ENCODER PRESS TIME: %d", event.value);
+            if (500 <= event.value && !notified)
+            {
                 notified = true;
                 notifyDisplay(AppEventData::event(AppEventType::DISPLAY_UPLEVEL));
             }
             break;
 
         case CloudMouse::EventType::ENCODER_BUTTON_RELEASED:
-            APP_LOGGER("ENCODER BUTTON RELEASED TIME: %d", event.value);
+            // APP_LOGGER("ENCODER BUTTON RELEASED TIME: %d", event.value);
             notified = false;
             break;
 
@@ -110,6 +111,17 @@ namespace CloudMouse::App
         case AppEventType::CALL_SWITCH_OFF_SERVICE:
             APP_LOGGER("Received CALL_SWITCH_OFF_SERVICE for entity: %s", event.getStringData().c_str());
             dataService->setSwitchOff(event.getStringData());
+            break;
+
+        
+        case AppEventType::CALL_LIGHT_ON_SERVICE:
+            APP_LOGGER("Received CALL_LIGHT_ON_SERVICE for entity: %s", event.getStringData().c_str());
+            dataService->setLightOn(event.getStringData());
+            break;
+
+        case AppEventType::CALL_LIGHT_OFF_SERVICE:
+            APP_LOGGER("Received CALL_LIGHT_OFF_SERVICE for entity: %s", event.getStringData().c_str());
+            dataService->setLightOff(event.getStringData());
             break;
         }
     }
@@ -208,13 +220,11 @@ namespace CloudMouse::App
 
             wsClient->setOnStateChanged([this](const String &entityId, const String &stateJson)
                                         {
-                if (isValidEntity(entityId)) {
                     Core::instance().getLEDManager()->flashColor(153,23,80, 255, 200);
                     AppStore::instance().setEntity(entityId, stateJson);
                     EventBus::instance().sendToUI(
                         toSDKEvent(AppEventData::entityUpdated(entityId.c_str()))
-                    );
-                } });
+                    ); });
 
             wsClient->begin();
 
@@ -256,27 +266,33 @@ namespace CloudMouse::App
             return;
         }
 
-        if (currentState != AppState::READY)
+        
+        notifyDisplay(AppEventData::event(AppEventType::SHOW_LOADING));
+
+        String entitiesJson = prefs->getSelectedEntities();
+        JsonDocument doc;
+        DeserializationError error = deserializeJson(doc, entitiesJson);
+
+        JsonArray entities = doc.as<JsonArray>();
+        int entityCount = entities.size();
+        for (int i = 0; i < entityCount; i++)
         {
-            notifyDisplay(AppEventData::event(AppEventType::SHOW_LOADING));
-
-            String entitiesJson = prefs->getSelectedEntities();
-            JsonDocument doc;
-            DeserializationError error = deserializeJson(doc, entitiesJson);
-
-            JsonArray entities = doc.as<JsonArray>();
-            int entityCount = entities.size();
-            for (int i = 0; i < entityCount; i++)
-            {
-                JsonObject entity = entities[i];
-                String entityId = entity["entity_id"].as<String>();
-                dataService->fetchEntityStatus(entityId);
-            }
-
-            changeState(AppState::READY);
-            return;
+            JsonObject entity = entities[i];
+            String entityId = entity["entity_id"].as<String>();
+            dataService->fetchEntityStatus(entityId);
         }
 
-        notifyDisplay(AppEventData::event(AppEventType::CONFIG_SET));
+        if (currentState != AppState::READY) 
+        {
+            // this will notify a CONFIG_SET event to the display
+            // called the first time the user set the config
+            changeState(AppState::READY);
+        }
+        else 
+        {
+            // otherwise we call config set even tho the systems
+            // is already in READY state (called every time the config is updated)
+            notifyDisplay(AppEventData::event(AppEventType::CONFIG_SET));
+        }
     }
 }

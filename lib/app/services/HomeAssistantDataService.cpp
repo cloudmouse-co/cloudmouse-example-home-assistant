@@ -116,6 +116,8 @@ namespace CloudMouse::App::Services
         bool HomeAssistantDataService::entranceLightOn() { return callService("light", "turn_on", "light.entrata"); }
         bool HomeAssistantDataService::setSwitchOn(const String &entityId) { return callService("switch", "turn_on", entityId); }
         bool HomeAssistantDataService::setSwitchOff(const String &entityId) { return callService("switch", "turn_off", entityId); }
+        bool HomeAssistantDataService::setLightOn(const String &entityId) { return callService("light", "turn_on", entityId); }
+        bool HomeAssistantDataService::setLightOff(const String &entityId) { return callService("light", "turn_off", entityId); }
 
         String HomeAssistantDataService::fetchEntityList(HomeAssistantPrefs &prefs)
         {
