@@ -12,8 +12,19 @@ namespace CloudMouse::App
     class HomeAssistantEntity;
 }
 
+
 namespace CloudMouse::App::Ui
 {
+    extern "C" {
+      LV_FONT_DECLARE(font_awesome_solid_20);
+    }
+
+    #define FA_ICON_LIGHT   "\xEF\x83\xAB"  // 0xF0EB - Lightbulb
+    #define FA_ICON_CLIMATE "\xEF\x81\xAD"  // 0xF06D - Fire/Thermometer
+    #define FA_ICON_SWITCH  "\xEF\x88\x84"  // 0xF204 - Toggle
+    #define FA_ICON_COVER   "\xEE\x92\xAF"  // 0xE4AF - Window/Blinds
+    #define FA_ICON_SENSOR  "\xEF\x8B\x9B"  // 0xF2DB - Microchip/Sensor
+
     using namespace CloudMouse::App::Services;
     using namespace CloudMouse::App;
 

@@ -425,7 +425,7 @@ namespace CloudMouse::App::Ui
         lv_obj_set_scrollbar_mode(sidebar_container, LV_SCROLLBAR_MODE_OFF);
 
         sidebar_btn_home = lv_button_create(sidebar_container);
-        lv_obj_set_size(sidebar_btn_home, 53, 53);
+        lv_obj_set_size(sidebar_btn_home, 54, 54);
         lv_obj_align(sidebar_btn_home, LV_ALIGN_CENTER, 5, 0);
         lv_obj_set_style_bg_color(sidebar_btn_home, lv_color_hex(0x0d6079), 0);
         lv_obj_set_style_shadow_width(sidebar_btn_home, 0, LV_PART_MAIN);
@@ -446,7 +446,7 @@ namespace CloudMouse::App::Ui
         lv_obj_center(label_home);
 
         sidebar_btn_light = lv_button_create(sidebar_container);
-        lv_obj_set_size(sidebar_btn_light, 53, 53);
+        lv_obj_set_size(sidebar_btn_light, 54, 54);
         lv_obj_align(sidebar_btn_light, LV_ALIGN_CENTER, 64, 0);
         // lv_obj_set_style_bg_color(sidebar_btn_light, lv_color_hex(0x8936ec), 0);
         lv_obj_set_style_bg_color(sidebar_btn_light, lv_color_hex(0x323232), 0);
@@ -461,13 +461,13 @@ namespace CloudMouse::App::Ui
         manager->setActiveFilter(EntityFilter::LIGHT); }, LV_EVENT_CLICKED, this);
 
         lv_obj_t *label_light = lv_label_create(sidebar_btn_light);
-        lv_label_set_text(label_light, LV_SYMBOL_POWER);
+        lv_label_set_text(label_light, FA_ICON_LIGHT);
+        lv_obj_set_style_text_font(label_light, &font_awesome_solid_20, 0);
         lv_obj_set_style_text_color(label_light, lv_color_hex(0xFFFFFF), 0);
-        lv_obj_set_style_text_font(label_light, &lv_font_montserrat_20, 0);
         lv_obj_center(label_light);
 
         sidebar_btn_switch = lv_button_create(sidebar_container);
-        lv_obj_set_size(sidebar_btn_switch, 53, 53);
+        lv_obj_set_size(sidebar_btn_switch, 54, 54);
         lv_obj_align(sidebar_btn_switch, LV_ALIGN_CENTER, 128, 0);
         // lv_obj_set_style_bg_color(sidebar_btn_switch, lv_color_hex(0x4b57f8), 0);
         lv_obj_set_style_bg_color(sidebar_btn_switch, lv_color_hex(0x323232), 0);
@@ -482,13 +482,13 @@ namespace CloudMouse::App::Ui
         manager->setActiveFilter(EntityFilter::SWITCH); }, LV_EVENT_CLICKED, this);
 
         lv_obj_t *label_switch = lv_label_create(sidebar_btn_switch);
-        lv_label_set_text(label_switch, LV_SYMBOL_CHARGE);
+        lv_label_set_text(label_switch, FA_ICON_SWITCH);
         lv_obj_set_style_text_color(label_switch, lv_color_hex(0xFFFFFF), 0);
-        lv_obj_set_style_text_font(label_switch, &lv_font_montserrat_20, 0);
+        lv_obj_set_style_text_font(label_switch, &font_awesome_solid_20, 0);
         lv_obj_center(label_switch);
 
         sidebar_btn_clima = lv_button_create(sidebar_container);
-        lv_obj_set_size(sidebar_btn_clima, 53, 53);
+        lv_obj_set_size(sidebar_btn_clima, 54, 54);
         lv_obj_align(sidebar_btn_clima, LV_ALIGN_CENTER, 0, 0);
         lv_obj_set_style_bg_color(sidebar_btn_clima, lv_color_hex(0x323232), 0);
         lv_obj_set_style_shadow_width(sidebar_btn_clima, 0, LV_PART_MAIN);
@@ -503,13 +503,13 @@ namespace CloudMouse::App::Ui
         manager->setActiveFilter(EntityFilter::CLIMA); }, LV_EVENT_CLICKED, this);
 
         lv_obj_t *label_clima = lv_label_create(sidebar_btn_clima);
-        lv_label_set_text(label_clima, LV_SYMBOL_SETTINGS);
+        lv_label_set_text(label_clima, FA_ICON_CLIMATE);
         lv_obj_set_style_text_color(label_clima, lv_color_hex(0xFFFFFF), 0);
-        lv_obj_set_style_text_font(label_clima, &lv_font_montserrat_20, 0);
+        lv_obj_set_style_text_font(label_clima, &font_awesome_solid_20, 0);
         lv_obj_center(label_clima);
 
         sidebar_btn_cover = lv_button_create(sidebar_container);
-        lv_obj_set_size(sidebar_btn_cover, 53, 53);
+        lv_obj_set_size(sidebar_btn_cover, 54, 54);
         lv_obj_align(sidebar_btn_cover, LV_ALIGN_CENTER, 0, 0);
         lv_obj_set_style_bg_color(sidebar_btn_cover, lv_color_hex(0x323232), 0);
         lv_obj_set_style_shadow_width(sidebar_btn_cover, 0, LV_PART_MAIN);
@@ -524,13 +524,13 @@ namespace CloudMouse::App::Ui
         manager->setActiveFilter(EntityFilter::COVER); }, LV_EVENT_CLICKED, this);
 
         lv_obj_t *label_cover = lv_label_create(sidebar_btn_cover);
-        lv_label_set_text(label_cover, LV_SYMBOL_LOOP);
+        lv_label_set_text(label_cover, FA_ICON_COVER);
         lv_obj_set_style_text_color(label_cover, lv_color_hex(0xFFFFFF), 0);
-        lv_obj_set_style_text_font(label_cover, &lv_font_montserrat_20, 0);
+        lv_obj_set_style_text_font(label_cover, &font_awesome_solid_20, 0);
         lv_obj_center(label_cover);
 
         sidebar_btn_sensor = lv_button_create(sidebar_container);
-        lv_obj_set_size(sidebar_btn_sensor, 53, 53);
+        lv_obj_set_size(sidebar_btn_sensor, 54, 54);
         lv_obj_align(sidebar_btn_sensor, LV_ALIGN_CENTER, 0, 0);
         lv_obj_set_style_bg_color(sidebar_btn_sensor, lv_color_hex(0x323232), 0);
         lv_obj_set_style_shadow_width(sidebar_btn_sensor, 0, LV_PART_MAIN);
@@ -545,9 +545,9 @@ namespace CloudMouse::App::Ui
         manager->setActiveFilter(EntityFilter::SENSOR); }, LV_EVENT_CLICKED, this);
 
         lv_obj_t *label_sensor = lv_label_create(sidebar_btn_sensor);
-        lv_label_set_text(label_sensor, LV_SYMBOL_BELL);
+        lv_label_set_text(label_sensor, FA_ICON_SENSOR);
         lv_obj_set_style_text_color(label_sensor, lv_color_hex(0xFFFFFF), 0);
-        lv_obj_set_style_text_font(label_sensor, &lv_font_montserrat_20, 0);
+        lv_obj_set_style_text_font(label_sensor, &font_awesome_solid_20, 0);
         lv_obj_center(label_sensor);
 
         // HEADER
@@ -726,6 +726,22 @@ namespace CloudMouse::App::Ui
                 {
                     lv_obj_set_style_bg_color(status_led, lv_color_hex(0x6f757a), 0);
                 }
+            } else if(entityId.startsWith("switch."))
+            {
+                lv_obj_t *status_led = lv_obj_create(item);
+                lv_obj_align(status_led, LV_ALIGN_RIGHT_MID, -45, 0);
+                lv_obj_set_size(status_led, 13, 13);
+                lv_obj_set_style_border_width(status_led, 0, 0);
+                lv_obj_set_style_radius(status_led, LV_RADIUS_CIRCLE, 0);
+
+                if (String(state).equals("on"))
+                {
+                    lv_obj_set_style_bg_color(status_led, lv_color_hex(0xffc107), 0);
+                }
+                else
+                {
+                    lv_obj_set_style_bg_color(status_led, lv_color_hex(0x6f757a), 0);
+                }
             }
 
             lv_obj_t *state_label = lv_label_create(item);
@@ -754,6 +770,15 @@ namespace CloudMouse::App::Ui
                 break;
             case EntityFilter::SWITCH:
                 filterName = "switches";
+                break;
+            case EntityFilter::CLIMA:
+                filterName = "clima";
+                break;
+            case EntityFilter::COVER:
+                filterName = "covers";
+                break;
+            case EntityFilter::SENSOR:
+                filterName = "sensors";
                 break;
             }
 
@@ -1206,27 +1231,27 @@ namespace CloudMouse::App::Ui
         switch (current_filter)
         {
         case EntityFilter::ALL:
-            lv_label_set_text(header_list_label, LV_SYMBOL_HOME "  Home Assistant");
+            lv_label_set_text(header_list_label, /* LV_SYMBOL_HOME "   */"Home Assistant");
             break;
 
         case EntityFilter::LIGHT:
-            lv_label_set_text(header_list_label, LV_SYMBOL_POWER "  Lights");
+            lv_label_set_text(header_list_label, /* FA_ICON_LIGHT "   */"Lights");
             break;
 
         case EntityFilter::SWITCH:
-            lv_label_set_text(header_list_label, LV_SYMBOL_CHARGE "  Switches");
+            lv_label_set_text(header_list_label, /* FA_ICON_SWITCH "   */"Switches");
             break;
 
         case EntityFilter::CLIMA:
-            lv_label_set_text(header_list_label, LV_SYMBOL_SETTINGS "  Clima");
+            lv_label_set_text(header_list_label, /* FA_ICON_CLIMATE "   */"Clima");
             break;
 
         case EntityFilter::COVER:
-            lv_label_set_text(header_list_label, LV_SYMBOL_LOOP "  Covers");
+            lv_label_set_text(header_list_label, /* FA_ICON_COVER "   */"Covers");
             break;
 
         case EntityFilter::SENSOR:
-            lv_label_set_text(header_list_label, LV_SYMBOL_BELL "  Sensors");
+            lv_label_set_text(header_list_label, /* FA_ICON_SENSOR "   */"Sensors");
             break;
         }
 
@@ -1313,7 +1338,7 @@ namespace CloudMouse::App::Ui
 
         const char *stored_id = (const char *)lv_obj_get_user_data(item);
 
-        if (String(stored_id).startsWith("light."))
+        if (String(stored_id).startsWith("light.") || String(stored_id).startsWith("switch."))
         {
             const char *state = entityData->getState();
 
