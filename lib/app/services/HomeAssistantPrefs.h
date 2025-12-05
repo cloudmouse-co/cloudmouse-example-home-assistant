@@ -25,6 +25,11 @@ namespace CloudMouse::App::Services
 
         bool hasHost();
 
+        void setPort(const String &port);
+        String getPort();
+
+        bool hasPort();
+
         void setSelectedEntities(const String &entitiesJson);
         String getSelectedEntities();
         bool hasSelectedEntities();
@@ -36,10 +41,12 @@ namespace CloudMouse::App::Services
 
         const char *API_KEY_NVS_KEY = "ha_api_key";
         const char *HOST_NVS_KEY = "ha_host";
+        const char *PORT_NVS_KEY = "ha_port";
         const char *ENTITIES_NVS_KEY = "ha_entities";
 
         mutable String cachedApiKey;
         mutable String cachedHost;
+        mutable String cachedPort;
         String cachedEntities;
         mutable bool cacheValid;
     };

@@ -29,7 +29,7 @@ namespace CloudMouse::App
         OnHAErrorCallback onError;
 
     public:
-        HomeAssistantWebSocketClient(const String& host, uint16_t port, const String& token);
+        HomeAssistantWebSocketClient(const String& host, const String &port, const String& token);
         ~HomeAssistantWebSocketClient();
 
         void begin();

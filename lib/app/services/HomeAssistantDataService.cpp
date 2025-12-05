@@ -14,9 +14,9 @@ namespace CloudMouse::App::Services
         {
             APP_LOGGER("Initializing Data Service...");
 
-            if (prefs.hasApiKey() && prefs.hasHost())
+            if (prefs.hasApiKey() && prefs.hasHost() && prefs.getPort())
             {
-                haBaseUrl = prefs.getHost();
+                haBaseUrl = "http://" + prefs.getHost() + ":" + prefs.getPort();
                 haToken = prefs.getApiKey();
 
                 APP_LOGGER("✅ Data Service initialized gracefully!");
@@ -37,7 +37,7 @@ namespace CloudMouse::App::Services
 
             Core::instance().getLEDManager()->setLoadingState(true);
 
-            String url = haBaseUrl + "api/services/" + domain + "/" + service;
+            String url = haBaseUrl + "/api/services/" + domain + "/" + service;
 
             APP_LOGGER("🏠 Calling HA: %s\n", url.c_str());
 
@@ -80,7 +80,7 @@ namespace CloudMouse::App::Services
 
             Core::instance().getLEDManager()->setLoadingState(true);
 
-            String url = haBaseUrl + "api/states/" + entity_id;
+            String url = haBaseUrl + "/api/states/" + entity_id;
 
             APP_LOGGER("🏠 Calling HA: %s\n", url.c_str());
 
@@ -122,7 +122,7 @@ namespace CloudMouse::App::Services
         String HomeAssistantDataService::fetchEntityList(HomeAssistantPrefs &prefs)
         {
             HTTPClient http;
-            String url = prefs.getHost() + "api/states";
+            String url = "http://" + prefs.getHost() + ":" + prefs.getPort() + "/api/states";
             String bearer = "Bearer " + prefs.getApiKey();
 
             APP_LOGGER("🌐 GET %s", url.c_str());

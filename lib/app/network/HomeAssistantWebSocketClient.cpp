@@ -8,11 +8,11 @@ namespace CloudMouse::App
 {
     HomeAssistantWebSocketClient::HomeAssistantWebSocketClient(
         const String& host, 
-        uint16_t port, 
+        const String &port, 
         const String& token
     ) : token(token), isAuthenticated(false), messageId(1)
     {
-        String url = "ws://" + host + ":" + String(port) + "/api/websocket";
+        String url = "ws://" + host + ":" + port + "/api/websocket";
         wsClient = new CloudMouse::SDK::WebSocketClient(url);
     }
 

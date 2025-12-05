@@ -125,9 +125,11 @@ namespace CloudMouse::App::Network
 
         String apiKey = instance->webServer->arg("api_key");
         String host = instance->webServer->arg("host");
+        String port = instance->webServer->arg("port");
 
         instance->prefs.setApiKey(apiKey);
         instance->prefs.setHost(host);
+        instance->prefs.setPort(port);
 
         instance->webServer->sendHeader("Location", "/home-assistant/config");
         instance->webServer->send(302);
@@ -215,10 +217,11 @@ namespace CloudMouse::App::Network
         // html += generateCSS();
         html += "</style></head><body>";
         html += "<div class=\"container\">";
-        html += "<h1>Home Assistant setup</h1>";
+        html += "<h1>Home Assistant Setup</h1>";
         html += "<form method=\"POST\" action=\"/home-assistant/setup\">";
-        html += "<label>Api Key <input name=\"api_key\" value=\"\" type=\"text\" /></label>";
-        html += "<label>Home Assistant Host <input name=\"host\" value=\"\" type=\"text\" /></label>";
+        html += "<label>Host <input name=\"host\" value=\"\" type=\"text\" /></label> <br />";
+        html += "<label>Port <input name=\"port\" value=\"\" type=\"text\" /></label> <br />";
+        html += "<label>Token <input name=\"api_key\" value=\"\" type=\"text\" /></label><br />";
         html += "<input value=\"Save\" type=\"submit\" />";
         html += "</form>";
         html += "</div></body></html>";

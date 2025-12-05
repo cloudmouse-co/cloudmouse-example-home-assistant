@@ -208,11 +208,9 @@ namespace CloudMouse::App
 
             notifyDisplay(AppEventData::event(AppEventType::SHOW_LOADING));
 
-            String host = prefs->getHost();
-
             wsClient = new HomeAssistantWebSocketClient(
-                "192.168.1.129",
-                8123,
+                prefs->getHost(),
+                prefs->getPort(),
                 prefs->getApiKey());
 
             wsClient->setOnConnected([this]()
