@@ -349,7 +349,7 @@ namespace CloudMouse
         break;
 
       default:
-        // Unhandled event type
+        EventBus::instance().sendToUI(event);
         break;
       }
     }
@@ -461,6 +461,19 @@ namespace CloudMouse
           encoder->resetLastPressDuration();
           Event buttonReleasedEvent(EventType::ENCODER_BUTTON_RELEASED, pressDuration);
           EventBus::instance().sendToMain(buttonReleasedEvent);
+        }
+
+        if (encoder->getPressAndRotate())
+        {
+          int delta = encoder->getPressAndRotateMovement();
+          Event pressAndRotate(EventType::ENCODER_PRESS_AND_ROTATE, delta);
+          EventBus::instance().sendToMain(pressAndRotate);
+        }
+
+        if (encoder->getDoubleClicked())
+        {
+          Event doubleClickEvent(EventType::ENCODER_DOUBLE_CLICK);
+          EventBus::instance().sendToMain(doubleClickEvent);
         }
       }
 
