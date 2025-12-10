@@ -220,6 +220,10 @@ namespace CloudMouse::Hardware
             renderWiFiConnecting();
             break;
 
+        case EventType::ENCODER_PRESS_TIME:
+            wakeUp();
+            break;
+
         case EventType::ENCODER_ROTATION:
         {
 
