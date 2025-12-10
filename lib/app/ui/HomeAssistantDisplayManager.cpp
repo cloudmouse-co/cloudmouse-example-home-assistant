@@ -252,7 +252,7 @@ namespace CloudMouse::App::Ui
         lv_obj_t *header = lv_obj_create(parent);
         lv_obj_set_size(header, 480, 40);
         lv_obj_align(header, LV_ALIGN_TOP_MID, 0, 0);
-        lv_obj_set_style_bg_color(header, lv_color_hex(0x222222), 0);
+        lv_obj_set_style_bg_color(header, lv_color_hex(0x000000), 0);
         lv_obj_set_style_border_width(header, 0, 0);
         lv_obj_set_style_radius(header, 0, 0);
         lv_obj_set_scrollbar_mode(header, LV_SCROLLBAR_MODE_OFF);
@@ -272,18 +272,19 @@ namespace CloudMouse::App::Ui
         screen_config_needed = lv_obj_create(NULL);
         lv_obj_set_style_bg_color(screen_config_needed, lv_color_hex(0x000000), 0);
 
-        createHeader(screen_config_needed, "Configuration Needed");
+        createHeader(screen_config_needed, "");
 
         // Container principale
         lv_obj_t *container = lv_obj_create(screen_config_needed);
-        lv_obj_set_size(container, 460, 260);
-        lv_obj_align(container, LV_ALIGN_CENTER, 0, 10);
+        lv_obj_set_size(container, 460, 300);
+        lv_obj_align(container, LV_ALIGN_CENTER, 0, 0);
         lv_obj_set_style_bg_color(container, lv_color_hex(0x111111), 0);
         lv_obj_set_style_border_width(container, 2, 0);
         lv_obj_set_style_border_color(container, lv_color_hex(0xFF9800), 0);
-        lv_obj_set_style_pad_all(container, 20, 0);
+        lv_obj_set_style_pad_all(container, 25, 0);
         lv_obj_set_flex_flow(container, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_flex_align(container, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_scrollbar_mode(container, LV_SCROLLBAR_MODE_OFF);
 
         // Icona warning
         lv_obj_t *icon = lv_label_create(container);
@@ -725,27 +726,43 @@ namespace CloudMouse::App::Ui
     //     APP_LOGGER("✅ Entity list populated with %d filtered entities", entityCount);
     // }
 
+    void HomeAssistantDisplayManager::resetContentContainer()
+    {
+        lv_obj_clean(content_container);
+        lv_group_remove_all_objs(encoder_group);
+        
+        // Reset to default state
+        lv_obj_set_flex_flow(content_container, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(content_container, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+        lv_obj_set_scrollbar_mode(content_container, LV_SCROLLBAR_MODE_OFF);
+        lv_obj_remove_flag(content_container, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_remove_flag(content_container, LV_OBJ_FLAG_SCROLL_MOMENTUM);
+    }
+
     void HomeAssistantDisplayManager::renderLoading()
     {
         current_view = ViewType::LOADING;
 
         // Clean content
-        lv_obj_clean(content_container);
-        lv_group_remove_all_objs(encoder_group);
+        resetContentContainer();
 
+        // set alignment
+        lv_obj_set_flex_align(content_container, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+
+        // clean header
         lv_label_set_text(header_list_label, "");
 
         // Spinner
         lv_obj_t *spinner_loading = lv_spinner_create(content_container);
         lv_obj_set_size(spinner_loading, 80, 80);
-        lv_obj_align(spinner_loading, LV_ALIGN_CENTER, 0, -40);
+        lv_obj_align(spinner_loading, LV_ALIGN_CENTER, 0, -60);
         lv_obj_set_style_arc_color(spinner_loading, lv_color_hex(0x009ac7), LV_PART_INDICATOR);
 
         // Label
         lv_obj_t *label_loading = lv_label_create(content_container);
         lv_label_set_text(label_loading, "Syncronizing, please wait..");
         lv_obj_set_style_text_color(label_loading, lv_color_hex(0x656565), 0);
-        lv_obj_align(label_loading, LV_ALIGN_CENTER, 0, 40);
+        lv_obj_align(label_loading, LV_ALIGN_CENTER, 0, 60);
     }
 
     void HomeAssistantDisplayManager::showEntityList()
@@ -1238,15 +1255,11 @@ namespace CloudMouse::App::Ui
     {
         APP_LOGGER("Rendering entity list with filter: %d", (int)current_filter);
 
-        // Clean content
-        lv_obj_clean(content_container);
-        lv_group_remove_all_objs(encoder_group);
-
-        // Set layout for list view
-        lv_obj_set_flex_flow(content_container, LV_FLEX_FLOW_COLUMN);
+        resetContentContainer();        
+        
+        // sett scrollbar mode
         lv_obj_set_scrollbar_mode(content_container, LV_SCROLLBAR_MODE_AUTO);
         lv_obj_add_flag(content_container, LV_OBJ_FLAG_SCROLLABLE);
-        lv_obj_remove_flag(content_container, LV_OBJ_FLAG_SCROLL_MOMENTUM);
 
         // Update header
         updateHeaderLabel();
@@ -1550,8 +1563,8 @@ namespace CloudMouse::App::Ui
         current_filter = filter;
         updateSidebarStyles();
         updateHeaderLabel();
-        renderEntityList();   // Re-populate with new filter
-        focusEntityList();    // Return focus to entity list
+        renderEntityList(); // Re-populate with new filter
+        focusEntityList();  // Return focus to entity list
     }
 
     // =========================================================

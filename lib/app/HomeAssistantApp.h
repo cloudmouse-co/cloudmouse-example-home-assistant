@@ -214,5 +214,6 @@ namespace CloudMouse::App
 
         void notifyDisplay(const AppEventData &eventData);
         void onConfigurationSaved();
+        bool fetchSelectedEntities();
     };
 } // namespace CloudMouse::App

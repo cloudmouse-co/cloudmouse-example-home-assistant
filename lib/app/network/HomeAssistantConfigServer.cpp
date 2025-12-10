@@ -72,7 +72,7 @@ namespace CloudMouse::App::Network
 
     bool HomeAssistantConfigServer::hasValidSetup()
     {
-        return prefs.hasApiKey() && prefs.hasHost();
+        return prefs.hasApiKey() && prefs.hasHost() && prefs.hasPort();
     }
 
     bool HomeAssistantConfigServer::hasValidConfig()

@@ -74,6 +74,7 @@ namespace CloudMouse::App::Ui
         void renderClimateDetail(const String &entityId);
         void renderCoverDetail(const String &entityId);
         void renderLoading();
+        void resetContentContainer();
 
         lv_group_t *encoder_group;
 

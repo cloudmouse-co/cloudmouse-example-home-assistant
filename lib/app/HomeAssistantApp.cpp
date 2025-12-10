@@ -113,7 +113,6 @@ namespace CloudMouse::App
             dataService->setSwitchOff(event.getStringData());
             break;
 
-        
         case AppEventType::CALL_LIGHT_ON_SERVICE:
             APP_LOGGER("Received CALL_LIGHT_ON_SERVICE for entity: %s", event.getStringData().c_str());
             dataService->setLightOn(event.getStringData());
@@ -226,20 +225,14 @@ namespace CloudMouse::App
 
             wsClient->begin();
 
-            String entitiesJson = prefs->getSelectedEntities();
-            JsonDocument doc;
-            DeserializationError error = deserializeJson(doc, entitiesJson);
-
-            JsonArray entities = doc.as<JsonArray>();
-            int entityCount = entities.size();
-            for (int i = 0; i < entityCount; i++)
+            if (fetchSelectedEntities())
             {
-                JsonObject entity = entities[i];
-                String entityId = entity["entity_id"].as<String>();
-                dataService->fetchEntityStatus(entityId);
+                changeState(AppState::READY);
             }
-
-            changeState(AppState::READY);
+            else
+            {
+                changeState(AppState::ERROR);
+            }
         }
     }
 
@@ -254,43 +247,68 @@ namespace CloudMouse::App
 
         if (!configServer->hasValidSetup())
         {
+            APP_LOGGER("SETUP not valid");
             changeState(AppState::SETUP_NEEDED);
             return;
         }
 
         if (!configServer->hasValidConfig())
         {
+            APP_LOGGER("CONFIG not valid");
             changeState(AppState::CONFIG_NEEDED);
             return;
         }
 
-        
         notifyDisplay(AppEventData::event(AppEventType::SHOW_LOADING));
+
+        if (fetchSelectedEntities())
+        {
+            if (currentState != AppState::READY)
+            {
+                // this will notify a CONFIG_SET event to the display
+                // called the first time the user set the config
+                changeState(AppState::READY);
+            }
+            else
+            {
+                // otherwise we call config set even tho the systems
+                // is already in READY state (called every time the config is updated)
+                notifyDisplay(AppEventData::event(AppEventType::CONFIG_SET));
+            }
+        } 
+        else 
+        {
+            changeState(AppState::ERROR);
+        }
+
+    }
+
+    bool HomeAssistantApp::fetchSelectedEntities()
+    {
+        APP_LOGGER("FETCHING SELECTED ENTITIES");
 
         String entitiesJson = prefs->getSelectedEntities();
         JsonDocument doc;
         DeserializationError error = deserializeJson(doc, entitiesJson);
 
+        if (error)
+        {
+            APP_LOGGER("DESERIALIZATION ERROR %s", error.c_str());
+            return false;
+        }
+
         JsonArray entities = doc.as<JsonArray>();
         int entityCount = entities.size();
+        Core::instance().getLEDManager()->setLoadingState(true);
         for (int i = 0; i < entityCount; i++)
         {
             JsonObject entity = entities[i];
             String entityId = entity["entity_id"].as<String>();
             dataService->fetchEntityStatus(entityId);
+            delay(50);
         }
+        Core::instance().getLEDManager()->setLoadingState(false);
 
-        if (currentState != AppState::READY) 
-        {
-            // this will notify a CONFIG_SET event to the display
-            // called the first time the user set the config
-            changeState(AppState::READY);
-        }
-        else 
-        {
-            // otherwise we call config set even tho the systems
-            // is already in READY state (called every time the config is updated)
-            notifyDisplay(AppEventData::event(AppEventType::CONFIG_SET));
-        }
+        return true;
     }
 }

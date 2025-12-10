@@ -78,8 +78,6 @@ namespace CloudMouse::App::Services
                 return false;
             }
 
-            Core::instance().getLEDManager()->setLoadingState(true);
-
             String url = haBaseUrl + "/api/states/" + entity_id;
 
             APP_LOGGER("🏠 Calling HA: %s\n", url.c_str());
@@ -104,8 +102,6 @@ namespace CloudMouse::App::Services
 
             http.end();
             
-            Core::instance().getLEDManager()->setLoadingState(false);
-
             return success;
         }
 
