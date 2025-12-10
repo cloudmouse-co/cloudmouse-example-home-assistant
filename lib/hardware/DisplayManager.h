@@ -142,6 +142,7 @@ namespace CloudMouse::Hardware
         Screen currentScreen = Screen::HELLO_WORLD;
         int32_t encoder_diff = 0;
         lv_indev_state_t encoder_state = LV_INDEV_STATE_RELEASED;
+        unsigned long lastPushAndRotateTime = 0;
 
         // Brightness management variables
         int currentBrightness = BRIGHTNESS_UP_TARGET;

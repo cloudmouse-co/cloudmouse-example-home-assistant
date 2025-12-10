@@ -261,26 +261,51 @@ namespace CloudMouse::Hardware
             break;
 
         case EventType::ENCODER_ROTATION:
+        {
             wakeUp();
-            encoder_diff += event.value;
-            if (currentScreen == Screen::HELLO_WORLD)
+            if (currentScreen == Screen::HELLO_WORLD && millis() - lastPushAndRotateTime >= 500)
             {
                 lv_label_set_text_fmt(label_hello_status, "Encoder rotation: %s", event.value > 0 ? "RIGHT" : "LEFT");
             }
             break;
+        }
 
         case EventType::ENCODER_CLICK:
             wakeUp();
             encoder_state = LV_INDEV_STATE_PRESSED;
+            // Button click - record interaction and update display if on interactive screen
+            SDK_LOGGER("🖱️ Display received encoder click");
             if (currentScreen == Screen::HELLO_WORLD)
             {
                 lv_label_set_text(label_hello_status, "Click!");
             }
             break;
 
+        case EventType::ENCODER_DOUBLE_CLICK:
+            wakeUp();
+            // Long press - record interaction and update display if on interactive screen
+            SDK_LOGGER("🖱️🖱️ Display received encoder double click");
+            if (currentScreen == Screen::HELLO_WORLD)
+            {
+                lv_label_set_text(label_hello_status, "Double Click!"); // Update to show long press feedback
+            }
+            break;
+
+        case EventType::ENCODER_PRESS_AND_ROTATE:
+            wakeUp();
+            // Long press - record interaction and update display if on interactive screen
+            SDK_LOGGER("🖱️ Display received encoder press and rotate");
+            lastPushAndRotateTime = millis();
+            if (currentScreen == Screen::HELLO_WORLD)
+            {
+                lv_label_set_text_fmt(label_hello_status, "Encoder press and rotate: %s", event.value > 0 ? "RIGHT" : "LEFT");
+            }
+            break;
+
         case EventType::ENCODER_LONG_PRESS:
             wakeUp();
             encoder_state = LV_INDEV_STATE_PRESSED;
+            // Long press - record interaction and update display if on interactive screen
             if (currentScreen == Screen::HELLO_WORLD)
             {
                 lv_label_set_text(label_hello_status, "Long Press!");

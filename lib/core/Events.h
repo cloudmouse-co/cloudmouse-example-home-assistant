@@ -101,6 +101,20 @@ enum class EventType {
      * Usage: Managing user interaction timing
      */
     ENCODER_BUTTON_RELEASED,
+
+    /**
+     * Rotary encoder button is holding donw while a rotation occures
+     * value: Rotation delta (-N to +N clicks, positive = clockwise)
+     * Usage: Menu navigation, value adjustment, settings
+     */
+    ENCODER_PRESS_AND_ROTATE,
+
+    /**
+     * Rotary encoder pressed and released twice within a defined period of time
+     * value: none
+     * Usage: Context menus, item detail access, confirm action
+     */
+    ENCODER_DOUBLE_CLICK,
     
     // ========================================================================
     // DISPLAY CONTROL EVENTS
