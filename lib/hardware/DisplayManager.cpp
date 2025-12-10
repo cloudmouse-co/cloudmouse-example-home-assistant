@@ -260,6 +260,10 @@ namespace CloudMouse::Hardware
             lv_disp_load_scr(screen_wifi_connecting);
             break;
 
+        case EventType::ENCODER_PRESS_TIME:
+            wakeUp();
+            break;
+
         case EventType::ENCODER_ROTATION:
         {
             wakeUp();
