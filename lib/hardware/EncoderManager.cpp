@@ -62,7 +62,7 @@ namespace CloudMouse::Hardware
 
         SDK_LOGGER("✅ EncoderManager initialized successfully\n");
         SDK_LOGGER("🎮 Pin configuration: CLK=%d, DT=%d, SW=%d\n",
-                      ENCODER_CLK_PIN, ENCODER_DT_PIN, ENCODER_SW_PIN);
+                   ENCODER_CLK_PIN, ENCODER_DT_PIN, ENCODER_SW_PIN);
         SDK_LOGGER("🎮 Initial encoder position: %d\n", lastValue);
     }
 
@@ -98,8 +98,21 @@ namespace CloudMouse::Hardware
             lastValue = newValue;
             movementPending = true;
 
-            // Optional debug logging for development and troubleshooting
-            // SDK_LOGGER("🔄 Encoder movement: %d (total pending: %d)\n", delta, movement);
+            // Detect press-and-rotate gesture
+            if (isButtonDown() && !pressAndRotateActive)
+            {
+                SDK_LOGGER("🎮 Press-and-rotate gesture detected!");
+                pressAndRotatePending = true;
+                pressAndRotateActive = true;
+
+                // Clear all button press tracking - this becomes a different gesture
+                clickPending = false;
+                longPressPending = false;
+                ultraLongPressPending = false;
+                waitingForDoubleClick = false;
+                longPressBuzzed = false;
+                ultraLongPressNotified = false;
+            }
         }
     }
 
@@ -107,83 +120,88 @@ namespace CloudMouse::Hardware
     // BUTTON PRESS PROCESSING
     // ============================================================================
 
+    // In EncoderManager.cpp - Update processButton():
+
     void EncoderManager::processButton()
     {
-        // Sample current button state (LOW = pressed, HIGH = released)
         bool currentButtonState = digitalRead(ENCODER_SW_PIN);
         unsigned long currentTime = millis();
 
-        // ========================================================================
-        // PRESS DETECTION (HIGH → LOW transition)
-        // ========================================================================
-
+        // PRESS DETECTION
         if (currentButtonState != lastButtonState && currentButtonState == LOW)
         {
-            // Button press detected - record timestamp and reset flags
             pressStartTime = currentTime;
-            longPressBuzzed = false;        // Reset buzzer flag for new press
-            ultraLongPressNotified = false; // Reset ultra-long press flag
+            longPressBuzzed = false;
+            ultraLongPressNotified = false;
+            pressAndRotateActive = false; // Reset press-and-rotate for new press
 
             SDK_LOGGER("👆 Button press detected");
         }
 
-        // ========================================================================
-        // RELEASE DETECTION (LOW → HIGH transition)
-        // ========================================================================
-
+        // RELEASE DETECTION
         if (currentButtonState != lastButtonState && currentButtonState == HIGH)
         {
-            // Button release detected - analyze press duration and set event flags
             unsigned long pressDuration = currentTime - pressStartTime;
             lastPressDuration = pressDuration;
 
-            SDK_LOGGER("👆 Button released after %lu ms\n", pressDuration);
+            SDK_LOGGER("👆 Button released after %lu ms", pressDuration);
 
-            // Classify press event based on duration thresholds
-            if (pressDuration >= ULTRA_LONG_PRESS_DURATION)
+            // If press-and-rotate was active, ignore all other button events
+            if (pressAndRotateActive)
             {
-                // Ultra-long press: >= 3000ms
-                // Note: Event may already be fired during ongoing press
-                if (!ultraLongPressNotified)
+                SDK_LOGGER("👆 Release ignored (was press-and-rotate gesture)");
+                pressAndRotateActive = false;
+            }
+            else
+            {
+                // Classify press event based on duration
+                if (pressDuration >= ULTRA_LONG_PRESS_DURATION)
                 {
-                    ultraLongPressPending = true;
-                    ultraLongPressNotified = true;
-                    SDK_LOGGER("👆🔒🔒 Ultra-long press event (on release)");
+                    if (!ultraLongPressNotified)
+                    {
+                        ultraLongPressPending = true;
+                        ultraLongPressNotified = true;
+                        SDK_LOGGER("👆🔒🔒 Ultra-long press event (on release)");
+                    }
+                }
+                else if (pressDuration >= LONG_PRESS_DURATION)
+                {
+                    longPressPending = true;
+                    SDK_LOGGER("👆🔒 Long press event");
+                }
+                else if (pressDuration < CLICK_TIMEOUT)
+                {
+                    // Double click detection logic
+                    if (waitingForDoubleClick)
+                    {
+                        // Second click arrived in time!
+                        doubleClickPending = true;
+                        waitingForDoubleClick = false;
+                        clickPending = false; // Cancel single click
+                        SDK_LOGGER("👆👆 Double click detected!");
+                    }
+                    else
+                    {
+                        // First click - start waiting for potential second click
+                        waitingForDoubleClick = true;
+                        lastClickTime = currentTime;
+                        SDK_LOGGER("👆 Click detected, waiting for potential double click...");
+                    }
                 }
             }
-            else if (pressDuration >= LONG_PRESS_DURATION)
-            {
-                // Long press: 1000-2999ms
-                longPressPending = true;
-                SDK_LOGGER("👆🔒 Long press event");
-            }
-            else if (pressDuration < CLICK_TIMEOUT)
-            {
-                // Short click: < 500ms
-                clickPending = true;
-                SDK_LOGGER("👆 Click event");
-            }
-            // Note: Press durations between 500-999ms are ignored (dead zone)
         }
 
-        // ========================================================================
-        // ONGOING PRESS FEEDBACK (while button held down)
-        // ========================================================================
-
-        if (currentButtonState == LOW)
+        // ONGOING PRESS FEEDBACK
+        if (currentButtonState == LOW && !pressAndRotateActive)
         {
             unsigned long pressTime = getCurrentPressTime();
 
-            // Long press haptic feedback (buzzer) - triggered once at threshold
             if (pressTime >= LONG_PRESS_DURATION && !longPressBuzzed)
             {
-                // Optional: Enable buzzer feedback for long press indication
-                // SimpleBuzzer::buzz();
                 longPressBuzzed = true;
-                SDK_LOGGER("🔊 Long press threshold reached (buzz disabled)");
+                SDK_LOGGER("🔊 Long press threshold reached");
             }
 
-            // Ultra-long press immediate notification (don't wait for release)
             if (pressTime >= ULTRA_LONG_PRESS_DURATION && !ultraLongPressNotified)
             {
                 ultraLongPressPending = true;
@@ -193,15 +211,21 @@ namespace CloudMouse::Hardware
         }
         else
         {
-            // Button released - ensure ultra-long press flag is properly reset
-            // This handles edge cases where timing might be inconsistent
             if (ultraLongPressNotified && lastPressDuration < ULTRA_LONG_PRESS_DURATION)
             {
                 ultraLongPressNotified = false;
             }
         }
 
-        // Update state tracking for next iteration
+        // Check double click timeout
+        if (waitingForDoubleClick && (currentTime - lastClickTime) > DOUBLE_CLICK_WINDOW)
+        {
+            // Timeout expired - fire single click
+            clickPending = true;
+            waitingForDoubleClick = false;
+            SDK_LOGGER("👆 Single click confirmed (timeout)");
+        }
+
         lastButtonState = currentButtonState;
     }
 
@@ -211,6 +235,13 @@ namespace CloudMouse::Hardware
 
     int EncoderManager::getMovement()
     {
+        // Block normal movement if button is pressed or press-and-rotate is active
+        if (isButtonDown() || pressAndRotateActive)
+        {
+            // Don't consume movement - it's for press-and-rotate gesture
+            return 0;
+        }
+
         // Return accumulated movement and reset for next consumption cycle
         if (movementPending)
         {
@@ -266,6 +297,49 @@ namespace CloudMouse::Hardware
 
         // No ultra-long press pending
         return false;
+    }
+
+    bool EncoderManager::getDoubleClicked()
+    {
+        if (doubleClickPending)
+        {
+            doubleClickPending = false;
+            SDK_LOGGER("📊 Double click event consumed");
+            return true;
+        }
+        return false;
+    }
+
+    bool EncoderManager::getPressAndRotate()
+    {
+        if (pressAndRotatePending)
+        {
+            pressAndRotatePending = false;
+            
+            // Reset the movement accumulator since we're consuming it as a gesture
+            // The app should call getMovement() separately if it wants the delta
+            // but we signal that press-and-rotate happened
+            
+            SDK_LOGGER("📊 Press-and-rotate event consumed");
+            return true;
+        }
+        return false;
+    }
+
+    int EncoderManager::getPressAndRotateMovement()
+    {
+        // Only return movement if press-and-rotate is active
+        if (pressAndRotateActive && movementPending)
+        {
+            int result = movement;
+            movement = 0;
+            movementPending = false;
+            
+            SDK_LOGGER("📊 Press-and-rotate movement: %d clicks", result);
+            return result;
+        }
+        
+        return 0;
     }
 
     // ============================================================================

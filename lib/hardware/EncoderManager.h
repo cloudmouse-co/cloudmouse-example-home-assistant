@@ -266,6 +266,44 @@ namespace CloudMouse::Hardware
          */
         bool resetLastPressDuration();
 
+        /**
+         * Check for a double click event within the DOUBLE_CLICK_WINDOW time
+         * Returns true if a multiple click is detected within the config time
+         * 
+         * @return true if a double button press is detected
+         * 
+         * Usage Examples:
+         * - UX Gesture: Switch to detail view if the current element has a fast one-click event attached
+         */
+        bool getDoubleClicked();
+
+        /**
+         Check for a double click event within the DOUBLE_CLICK_WINDOW time
+         * Returns true if a multiple click is detected within the config time
+         * 
+         * @return true if a press and rotate event is detected
+         * 
+         * Usage Examples:
+         * - UX Gesture: Enter/exit sub menus, call toggle functions, and so on..
+         */
+        bool getPressAndRotate();
+
+        /**
+         * Get accumulated encoder movements while the button is pressed
+         * Returns true if a press and rotate is detected
+         * 
+         * @return Rotation delta in encoder clicks
+         *         Positive values = clockwise rotation
+         *         Negative values = counter-clockwise rotation
+         *         Zero = no movement since last call
+         *
+         * Resolution: 4 hardware counts per physical detent (0.25° per count)
+         * Range: -32768 to +32767 (16-bit signed integer)* 
+         * Usage Examples:
+         * - UX Gesture: Set configs
+         */
+        int getPressAndRotateMovement();
+
     private:
         // ========================================================================
         // HARDWARE INTERFACE
@@ -293,10 +331,19 @@ namespace CloudMouse::Hardware
         bool clickPending = false;          // Short press event ready for consumption
         bool longPressPending = false;      // Long press event ready for consumption
         bool ultraLongPressPending = false; // Ultra-long press event ready for consumption
+        bool doubleClickPending = false;    // Double click event ready for cosumption
+        bool pressAndRotatePending = false;  // Press and rotate event ready for cosumption
 
         // State tracking for ongoing press feedback
         bool longPressBuzzed = false;        // Prevents multiple buzzer triggers during long press
         bool ultraLongPressNotified = false; // Prevents multiple ultra-long press events
+
+        // Double click detection
+        unsigned long lastClickTime = 0;     // Timestamp when a click occured
+        bool waitingForDoubleClick = false;  // Flag to check if a click occurs in a double click time window
+        
+        // Press and rotate detection
+        bool pressAndRotateActive = false;   // Flag to block other gestures
 
         // ========================================================================
         // TIMING CONFIGURATION CONSTANTS
@@ -305,6 +352,7 @@ namespace CloudMouse::Hardware
         static const int ULTRA_LONG_PRESS_DURATION = 3000; // 3 seconds for ultra-long press
         static const int LONG_PRESS_DURATION = 1000;       // 1 second for long press
         static const unsigned long CLICK_TIMEOUT = 500;    // 500ms maximum for click
+        static constexpr unsigned long DOUBLE_CLICK_WINDOW = 250; // ms between clicks
 
         // ========================================================================
         // INTERNAL PROCESSING METHODS
