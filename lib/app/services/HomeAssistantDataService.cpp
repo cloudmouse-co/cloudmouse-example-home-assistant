@@ -45,7 +45,16 @@ namespace CloudMouse::App::Services
         http.addHeader("Authorization", "Bearer " + haToken);
         http.addHeader("Content-Type", "application/json");
 
-        String payload = entityId.isEmpty() ? "{" + params + "}" : "{\"entity_id\":\"" + entityId + "\", " + params + "}";
+        String payload;
+
+        if (params.isEmpty())
+        {
+            payload = entityId.isEmpty() ? "{}" : "{\"entity_id\":\"" + entityId + "\"}";
+        }
+        else
+        {
+            payload = entityId.isEmpty() ? "{" + params + "}" : "{\"entity_id\":\"" + entityId + "\", " + params + "}";
+        }
 
         int httpCode = http.POST(payload);
         bool success = (httpCode == 200);
