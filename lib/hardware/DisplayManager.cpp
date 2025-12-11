@@ -268,6 +268,7 @@ namespace CloudMouse::Hardware
         case EventType::ENCODER_ROTATION:
         {
             wakeUp();
+            encoder_diff += event.value;
             if (currentScreen == Screen::HELLO_WORLD && millis() - lastPushAndRotateTime >= 500)
             {
                 lv_label_set_text_fmt(label_hello_status, "Encoder rotation: %s", event.value > 0 ? "RIGHT" : "LEFT");
