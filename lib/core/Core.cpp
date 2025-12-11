@@ -374,10 +374,10 @@ namespace CloudMouse
     SDK_LOGGER("🖱️ Encoder clicked!");
 
     // Visual feedback: green LED flash
-    if (ledManager)
-    {
-      ledManager->flashColor(0, 255, 0, 255, 200);
-    }
+    // if (ledManager)
+    // {
+    //   ledManager->flashColor(0, 255, 0, 255, 200);
+    // }
 
     // Audio feedback
     // SimpleBuzzer::buzz();
@@ -391,10 +391,10 @@ namespace CloudMouse
     SDK_LOGGER("⏱️ Encoder long press detected!");
 
     // Visual feedback: orange LED flash
-    if (ledManager)
-    {
-      ledManager->flashColor(255, 165, 0, 255, 500);
-    }
+    // if (ledManager)
+    // {
+    //   ledManager->flashColor(255, 165, 0, 255, 500);
+    // }
 
     // Audio feedback: error pattern
     // SimpleBuzzer::error();
