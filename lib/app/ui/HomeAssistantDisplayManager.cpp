@@ -219,17 +219,21 @@ namespace CloudMouse::App::Ui
                     {
                         lv_obj_remove_state(climate_arc_slider, LV_STATE_EDITED);
                         APP_LOGGER("Arc editing: OFF");
+                        float temp = currentTargetValue / 10.0f;;
+                        CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callClimateSetTemperature(currentEntityId, temp)));
+
                     }
                 }
                 else if (focused == climate_btn_on)
                 {
                     APP_LOGGER("ON button clicked!");
-                    // TODO: call HA service
+                    CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callClimateSetMode(currentEntityId, "heat")));
+
                 }
                 else if (focused == climate_btn_off)
                 {
                     APP_LOGGER("OFF button clicked!");
-                    // TODO: call HA service
+                    CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callClimateSetMode(currentEntityId, "off")));
                 }
             }
             else if (current_view == ViewType::SWITCH_DETAIL)

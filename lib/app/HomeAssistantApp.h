@@ -60,6 +60,8 @@ namespace CloudMouse::App
         CALL_COVER_OPEN_SERVICE = 45,
         CALL_COVER_CLOSE_SERVICE = 46,
         CALL_COVER_STOP_SERVICE = 47,
+        CALL_CLIMATE_SET_TEMPERATURE = 48,
+        CALL_CLIMATE_SET_MODE = 49,
         
         DISPLAY_UPLEVEL = 80,
 
@@ -152,6 +154,20 @@ namespace CloudMouse::App
         {
             AppEventData evt = AppEventData::event(AppEventType::CALL_COVER_CLOSE_SERVICE);
             evt.setStringData(entity_id);
+            return evt;
+        }
+
+        static AppEventData callClimateSetTemperature(const String &entity_id, const float &temperature)
+        {
+            AppEventData evt = AppEventData::event(AppEventType::CALL_CLIMATE_SET_TEMPERATURE);
+            snprintf(evt.stringData, sizeof(evt.stringData), "%s|%.1f", entity_id.c_str(), temperature);
+            return evt;
+        }
+
+        static AppEventData callClimateSetMode(const String &entity_id, const String &mode)
+        {
+            AppEventData evt = AppEventData::event(AppEventType::CALL_CLIMATE_SET_MODE);
+            snprintf(evt.stringData, sizeof(evt.stringData), "%s|%s", entity_id.c_str(), mode);
             return evt;
         }
         

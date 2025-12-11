@@ -14,7 +14,7 @@ namespace CloudMouse::App::Services
 
         bool init();
 
-        bool callService(const String &domain, const String &service, const String &entityId = "");
+        bool callService(const String &domain, const String &service, const String &entityId = "", const String &params = "");
 
         bool fetchEntityStatus(const String entity_id);
 
@@ -31,6 +31,9 @@ namespace CloudMouse::App::Services
         bool setCoverOpen(const String &entityId);
         bool setCoverStop(const String &entityId);
         bool setCoverClose(const String &entityId);
+
+        bool setClimateTemperature(const String &entityId, const float &temperature);
+        bool setClimateMode(const String &entityId, const String &mode);
 
         static String fetchEntityList(HomeAssistantPrefs &prefs);
 

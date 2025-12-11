@@ -132,11 +132,33 @@ namespace CloudMouse::App
             APP_LOGGER("Received CALL_COVER_OPEN_SERVICE for entity: %s", event.getStringData().c_str());
             dataService->setCoverOpen(event.getStringData());
             break;
-            
+
         case AppEventType::CALL_COVER_STOP_SERVICE:
             APP_LOGGER("Received CALL_COVER_STOP_SERVICE for entity: %s", event.getStringData().c_str());
             dataService->setCoverStop(event.getStringData());
             break;
+
+        case AppEventType::CALL_CLIMATE_SET_MODE:
+        {
+            APP_LOGGER("Received CALL_CLIMATE_SET_MODE for entity: %s", event.getStringData().c_str());
+            char entity_id[64];
+            char mode[32];
+
+            sscanf(event.stringData, "%[^|]|%s", entity_id, mode);
+            dataService->setClimateMode(String(entity_id), String(mode));
+            break;
+        }
+        
+        case AppEventType::CALL_CLIMATE_SET_TEMPERATURE:
+        {
+            APP_LOGGER("Received CALL_CLIMATE_SET_TEMPERATURE for entity: %s", event.getStringData().c_str());
+            char entity_id[64];
+            float temp;
+
+            sscanf(event.stringData, "%[^|]|%f", entity_id, &temp);
+            dataService->setClimateTemperature(String(entity_id), temp);
+            break;
+        }
         }
     }
 
@@ -290,12 +312,11 @@ namespace CloudMouse::App
                 // is already in READY state (called every time the config is updated)
                 notifyDisplay(AppEventData::event(AppEventType::CONFIG_SET));
             }
-        } 
-        else 
+        }
+        else
         {
             changeState(AppState::ERROR);
         }
-
     }
 
     bool HomeAssistantApp::fetchSelectedEntities()
