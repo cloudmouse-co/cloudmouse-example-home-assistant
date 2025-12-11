@@ -110,9 +110,10 @@ namespace CloudMouse::App::Ui
 
         switch (event.type)
         {
-        case CloudMouse::EventType::ENCODER_CLICK:
+
+        case CloudMouse::EventType::ENCODER_DOUBLE_CLICK:
         {
-            APP_LOGGER("ENCODER CLICK");
+            APP_LOGGER("ENCODER DOUBLE CLICK");
 
             if (current_view == ViewType::ENTITY_LIST)
             {
@@ -133,6 +134,70 @@ namespace CloudMouse::App::Ui
                         currentEntityId = String(entityId);
 
                         showEntityDetail(entityId);
+                    }
+                }
+            }
+
+            break;
+
+        }
+        
+
+        case CloudMouse::EventType::ENCODER_CLICK:
+        {
+            APP_LOGGER("ENCODER CLICK");
+
+            if (current_view == ViewType::ENTITY_LIST)
+            {
+                lv_obj_t *focused = lv_group_get_focused(encoder_group);
+
+                if (focused)
+                {
+                    const char * entityId = (const char *)lv_obj_get_user_data(focused);
+
+                    // Check for "toggle action" if exists call it...
+                    if (String(entityId).startsWith("light."))
+                    {
+                        auto entity = AppStore::instance().getEntity(entityId);
+
+                        if (String(entity->getState()).equals("on"))
+                        {
+                            CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callLightOff(entityId)));
+                        }
+                        else
+                        {
+                            CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callLightOn(entityId)));
+                        }
+                    }
+                    else if (String(entityId).startsWith("switch."))
+                    {
+                        auto entity = AppStore::instance().getEntity(entityId);
+
+                        if (String(entity->getState()).equals("on"))
+                        {
+                            CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callSwitchOff(entityId)));
+                        }
+                        else
+                        {
+                            CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callSwitchOn(entityId)));
+                        }
+                    }
+                    //.. otherwise show detail
+                    else 
+                    {
+                        // Get entity_id directly from user_data (already stored correctly!)
+    
+                        if (entityId)
+                        {
+                            APP_LOGGER("Selected entity: %s", entityId);
+    
+                            CloudMouse::EventBus::instance().sendToMain(
+                                toSDKEvent(AppEventData::fetchEntityStatus(entityId)));
+    
+                            currentEntityId = String(entityId);
+    
+                            showEntityDetail(entityId);
+                        }
                     }
                 }
             }
@@ -195,6 +260,25 @@ namespace CloudMouse::App::Ui
                     CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callLightOff(currentEntityId)));
                 }
             }
+            else if (current_view == ViewType::COVER_DETAIL)
+            {
+                lv_obj_t *focused = lv_group_get_focused(encoder_group);
+                if (focused == cover_btn_up)
+                {
+                    APP_LOGGER("OPEN button clicked!");
+                    CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callCoverOpen(currentEntityId)));
+                }
+                else if (focused == cover_btn_dwn)
+                {
+                    APP_LOGGER("CLOSE button clicked!");
+                    CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callCoverClose(currentEntityId)));
+                }
+                else 
+                {
+                    APP_LOGGER("STOP button clicked!");
+                    CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callCoverStop(currentEntityId)));
+                }
+            }
             else if (current_view == ViewType::SENSOR_DETAIL)
             {
                 showEntityList();
@@ -205,6 +289,8 @@ namespace CloudMouse::App::Ui
 
         case CloudMouse::EventType::ENCODER_ROTATION:
         {
+            APP_LOGGER("ENCODER ROTATION: %d", event.value);
+
             if (current_view == ViewType::CLIMATE_DETAIL)
             {
                 lv_obj_t *focused = lv_group_get_focused(encoder_group);
@@ -511,221 +597,6 @@ namespace CloudMouse::App::Ui
         APP_LOGGER("✅ main screen created (empty)");
     }
 
-    // void HomeAssistantDisplayManager::populateEntityList()
-    // {
-    //     APP_LOGGER("Populating entity list with filter: %d", (int)current_filter);
-
-    //     lv_obj_clean(content_container);
-    //     lv_group_remove_all_objs(encoder_group);
-
-    //     // Get filter colors
-    //     FilterColors colors = getFilterColors(current_filter);
-
-    //     // Get entities from prefs
-    //     String entitiesJson = prefs.getSelectedEntities();
-
-    //     if (entitiesJson.isEmpty())
-    //     {
-    //         APP_LOGGER("⚠️ No entities configured");
-    //         lv_obj_t *empty = lv_label_create(content_container);
-    //         lv_label_set_text(empty, "No entities configured.\nPlease configure via web interface.");
-    //         lv_obj_set_style_text_align(empty, LV_TEXT_ALIGN_CENTER, 0);
-    //         lv_obj_set_style_text_color(empty, lv_color_hex(0xFFFFFF), 0);
-    //         lv_obj_center(empty);
-    //         return;
-    //     }
-
-    //     // Parse JSON
-    //     JsonDocument doc;
-    //     DeserializationError error = deserializeJson(doc, entitiesJson);
-
-    //     if (error)
-    //     {
-    //         APP_LOGGER("❌ Failed to parse entities JSON: %s", error.c_str());
-    //         return;
-    //     }
-
-    //     JsonArray entities = doc.as<JsonArray>();
-    //     int entityCount = 0; // Count filtered entities
-
-    //     for (int i = 0; i < entities.size(); i++)
-    //     {
-    //         JsonObject entity = entities[i];
-    //         String entityId = entity["entity_id"].as<String>();
-    //         String friendlyName = entity["friendly_name"].as<String>();
-
-    //         // Apply filter
-    //         bool shouldShow = false;
-    //         switch (current_filter)
-    //         {
-    //         case EntityFilter::ALL:
-    //             shouldShow = true;
-    //             break;
-
-    //         case EntityFilter::LIGHT:
-    //             shouldShow = entityId.startsWith("light.");
-    //             break;
-
-    //         case EntityFilter::SWITCH:
-    //             shouldShow = entityId.startsWith("switch.");
-    //             break;
-
-    //         case EntityFilter::CLIMA:
-    //             shouldShow = entityId.startsWith("climate.");
-    //             break;
-
-    //         case EntityFilter::COVER:
-    //             shouldShow = entityId.startsWith("cover.");
-    //             break;
-
-    //         case EntityFilter::SENSOR:
-    //             shouldShow = entityId.startsWith("sensor.");
-    //             break;
-    //         }
-
-    //         if (!shouldShow)
-    //         {
-    //             continue; // Skip this entity
-    //         }
-
-    //         entityCount++;
-
-    //         auto entityData = AppStore::instance().getEntity(entityId);
-    //         if (!entityData)
-    //         {
-    //             APP_LOGGER("⚠️ Entity not found in store: %s", entityId.c_str());
-    //             continue;
-    //         }
-
-    //         // Fallback if friendly_name empty
-    //         if (friendlyName.isEmpty())
-    //         {
-    //             friendlyName = entityId;
-    //         }
-
-    //         lv_obj_t *item = lv_obj_create(content_container);
-    //         lv_obj_set_size(item, 384, 46);
-    //         lv_obj_align(item, LV_ALIGN_LEFT_MID, 15, 0);
-
-    //         // Normal state
-    //         lv_obj_set_style_bg_color(item, lv_color_hex(0x1f2224), 0);
-    //         lv_obj_set_style_border_width(item, 1, 0);
-    //         lv_obj_set_style_border_color(item, lv_color_hex(0x1f2224), 0);
-    //         lv_obj_set_style_radius(item, 8, 0);
-    //         lv_obj_set_style_pad_ver(item, -5, 0);
-    //         lv_obj_set_style_pad_hor(item, 10, 0);
-
-    //         // FOCUSED state - Use filter colors!
-    //         lv_obj_set_style_bg_color(item, lv_color_hex(colors.bg_color), LV_STATE_FOCUSED);
-    //         lv_obj_set_style_border_color(item, lv_color_hex(colors.border_color), LV_STATE_FOCUSED);
-    //         lv_obj_set_style_border_width(item, 1, LV_STATE_FOCUSED);
-
-    //         lv_obj_add_flag(item, LV_OBJ_FLAG_CLICKABLE);
-    //         lv_obj_clear_flag(item, LV_OBJ_FLAG_SCROLLABLE);
-
-    //         // Scroll when focused
-    //         lv_obj_add_event_cb(item, [](lv_event_t *e)
-    //                             {
-    //         lv_obj_t *target = lv_event_get_target_obj(e);
-    //         lv_obj_scroll_to_view(target, LV_ANIM_ON); }, LV_EVENT_FOCUSED, NULL);
-
-    //         // Label with friendly name
-    //         lv_obj_t *label = lv_label_create(item);
-    //         lv_label_set_text(label, friendlyName.c_str());
-    //         lv_obj_set_style_text_color(label, lv_color_hex(0xFFFFFF), 0);
-    //         lv_obj_set_style_text_font(label, &lv_font_montserrat_14, 0);
-    //         lv_obj_align(label, LV_ALIGN_LEFT_MID, 10, 0);
-
-    //         const char *state = entityData->getState();
-
-    //         if (entityId.startsWith("light."))
-    //         {
-    //             lv_obj_t *status_led = lv_obj_create(item);
-    //             lv_obj_align(status_led, LV_ALIGN_RIGHT_MID, -45, 0);
-    //             lv_obj_set_size(status_led, 13, 13);
-    //             lv_obj_set_style_border_width(status_led, 0, 0);
-    //             lv_obj_set_style_radius(status_led, LV_RADIUS_CIRCLE, 0);
-
-    //             if (String(state).equals("on"))
-    //             {
-    //                 lv_obj_set_style_bg_color(status_led, lv_color_hex(0xffc107), 0);
-    //             }
-    //             else
-    //             {
-    //                 lv_obj_set_style_bg_color(status_led, lv_color_hex(0x6f757a), 0);
-    //             }
-    //         }
-    //         else if (entityId.startsWith("switch."))
-    //         {
-    //             lv_obj_t *status_led = lv_obj_create(item);
-    //             lv_obj_align(status_led, LV_ALIGN_RIGHT_MID, -45, 0);
-    //             lv_obj_set_size(status_led, 13, 13);
-    //             lv_obj_set_style_border_width(status_led, 0, 0);
-    //             lv_obj_set_style_radius(status_led, LV_RADIUS_CIRCLE, 0);
-
-    //             if (String(state).equals("on"))
-    //             {
-    //                 lv_obj_set_style_bg_color(status_led, lv_color_hex(0xffc107), 0);
-    //             }
-    //             else
-    //             {
-    //                 lv_obj_set_style_bg_color(status_led, lv_color_hex(0x6f757a), 0);
-    //             }
-    //         }
-
-    //         lv_obj_t *state_label = lv_label_create(item);
-    //         lv_label_set_text(state_label, state);
-    //         lv_obj_set_style_text_color(state_label, lv_color_hex(0xFFFFFF), 0);
-    //         lv_obj_set_style_text_font(state_label, &lv_font_montserrat_12, 0);
-    //         lv_obj_align(state_label, LV_ALIGN_RIGHT_MID, -10, 0);
-
-    //         // Save entity_id as user_data
-    //         lv_obj_set_user_data(item, strdup(entityId.c_str()));
-
-    //         lv_group_add_obj(encoder_group, item);
-    //     }
-
-    //     // Check if filter returned no entities
-    //     if (entityCount == 0)
-    //     {
-    //         String filterName;
-    //         switch (current_filter)
-    //         {
-    //         case EntityFilter::ALL:
-    //             filterName = "entities";
-    //             break;
-    //         case EntityFilter::LIGHT:
-    //             filterName = "lights";
-    //             break;
-    //         case EntityFilter::SWITCH:
-    //             filterName = "switches";
-    //             break;
-    //         case EntityFilter::CLIMA:
-    //             filterName = "clima";
-    //             break;
-    //         case EntityFilter::COVER:
-    //             filterName = "covers";
-    //             break;
-    //         case EntityFilter::SENSOR:
-    //             filterName = "sensors";
-    //             break;
-    //         }
-
-    //         APP_LOGGER("⚠️ No %s found", filterName.c_str());
-
-    //         lv_obj_t *empty = lv_label_create(content_container);
-    //         lv_label_set_text_fmt(empty, "No %s found.", filterName.c_str());
-    //         lv_obj_set_style_text_align(empty, LV_TEXT_ALIGN_CENTER, 0);
-    //         lv_obj_set_style_text_color(empty, lv_color_hex(0xFFFFFF), 0);
-    //         lv_obj_center(empty);
-    //         return;
-    //     }
-
-    //     lv_group_set_wrap(encoder_group, false);
-
-    //     APP_LOGGER("✅ Entity list populated with %d filtered entities", entityCount);
-    // }
-
     void HomeAssistantDisplayManager::resetContentContainer()
     {
         lv_obj_clean(content_container);
@@ -780,15 +651,17 @@ namespace CloudMouse::App::Ui
     {
         APP_LOGGER("Showing detail for entity %s", entityId);
 
-        // Clean content
-        lv_obj_clean(content_container);
-        lv_group_remove_all_objs(encoder_group);
+        resetContentContainer();
 
-        // Set layout for list view
-        lv_obj_set_flex_flow(content_container, LV_FLEX_FLOW_COLUMN);
-        lv_obj_set_scrollbar_mode(content_container, LV_SCROLLBAR_MODE_AUTO);
-        lv_obj_add_flag(content_container, LV_OBJ_FLAG_SCROLLABLE);
-        lv_obj_remove_flag(content_container, LV_OBJ_FLAG_SCROLL_MOMENTUM);
+        // // Clean content
+        // lv_obj_clean(content_container);
+        // lv_group_remove_all_objs(encoder_group);
+
+        // // Set layout for list view
+        // lv_obj_set_flex_flow(content_container, LV_FLEX_FLOW_COLUMN);
+        // lv_obj_set_scrollbar_mode(content_container, LV_SCROLLBAR_MODE_AUTO);
+        // lv_obj_add_flag(content_container, LV_OBJ_FLAG_SCROLLABLE);
+        // lv_obj_remove_flag(content_container, LV_OBJ_FLAG_SCROLL_MOMENTUM);
 
         auto entity = AppStore::instance().getEntity(entityId);
         lv_label_set_text(header_list_label, entity->getFriendlyName());

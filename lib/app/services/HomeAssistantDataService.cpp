@@ -58,12 +58,16 @@ namespace CloudMouse::App::Services
                 APP_LOGGER("✅ HA call successful");
                 // APP_LOGGER("Payload received: %s", payload.c_str());
 
+                Core::instance().getLEDManager()->flashColor(0, 255, 0, 200, 500);
+
                 // AppStore::instance().setEntity(entityId, payload);
                 // CloudMouse::EventBus::instance().sendToUI(toSDKEvent(AppEventData::entityUpdated(entityId)));
             }
             else
             {
                 APP_LOGGER("❌ HA call failed: %d\n", httpCode);
+                Core::instance().getLEDManager()->flashColor(255, 0, 0, 200, 2000);
+                SimpleBuzzer::error();
             }
 
             http.end();
@@ -114,6 +118,9 @@ namespace CloudMouse::App::Services
         bool HomeAssistantDataService::setSwitchOff(const String &entityId) { return callService("switch", "turn_off", entityId); }
         bool HomeAssistantDataService::setLightOn(const String &entityId) { return callService("light", "turn_on", entityId); }
         bool HomeAssistantDataService::setLightOff(const String &entityId) { return callService("light", "turn_off", entityId); }
+        bool HomeAssistantDataService::setCoverOpen(const String &entityId) { return callService("cover", "open_cover", entityId); }
+        bool HomeAssistantDataService::setCoverStop(const String &entityId) { return callService("cover", "stop_cover", entityId); }
+        bool HomeAssistantDataService::setCoverClose(const String &entityId) { return callService("cover", "close_cover", entityId); }
 
         String HomeAssistantDataService::fetchEntityList(HomeAssistantPrefs &prefs)
         {

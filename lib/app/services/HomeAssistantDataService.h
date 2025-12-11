@@ -28,6 +28,10 @@ namespace CloudMouse::App::Services
         bool setLightOn(const String &entityId);
         bool setLightOff(const String &entityId);
 
+        bool setCoverOpen(const String &entityId);
+        bool setCoverStop(const String &entityId);
+        bool setCoverClose(const String &entityId);
+
         static String fetchEntityList(HomeAssistantPrefs &prefs);
 
     private:

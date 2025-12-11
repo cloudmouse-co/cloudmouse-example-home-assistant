@@ -57,9 +57,13 @@ namespace CloudMouse::App
         CALL_SWITCH_OFF_SERVICE = 42,
         CALL_LIGHT_ON_SERVICE = 43,
         CALL_LIGHT_OFF_SERVICE = 44,
-        ENTITY_UPDATED = 45,
+        CALL_COVER_OPEN_SERVICE = 45,
+        CALL_COVER_CLOSE_SERVICE = 46,
+        CALL_COVER_STOP_SERVICE = 47,
+        
+        DISPLAY_UPLEVEL = 80,
 
-        DISPLAY_UPLEVEL = 50,
+        ENTITY_UPDATED = 90,
     };
 
     struct AppEventData
@@ -129,6 +133,28 @@ namespace CloudMouse::App
             evt.setStringData(entity_id);
             return evt;
         }
+
+        static AppEventData callCoverOpen(const String &entity_id)
+        {
+            AppEventData evt = AppEventData::event(AppEventType::CALL_COVER_OPEN_SERVICE);
+            evt.setStringData(entity_id);
+            return evt;
+        }
+
+        static AppEventData callCoverStop(const String &entity_id)
+        {
+            AppEventData evt = AppEventData::event(AppEventType::CALL_COVER_STOP_SERVICE);
+            evt.setStringData(entity_id);
+            return evt;
+        }
+
+        static AppEventData callCoverClose(const String &entity_id)
+        {
+            AppEventData evt = AppEventData::event(AppEventType::CALL_COVER_CLOSE_SERVICE);
+            evt.setStringData(entity_id);
+            return evt;
+        }
+        
         /**
          * Set string payload with automatic truncation and null termination
          * Safely copies string data with bounds checking to prevent buffer overflow

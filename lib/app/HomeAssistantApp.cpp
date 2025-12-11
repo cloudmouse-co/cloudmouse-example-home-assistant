@@ -122,6 +122,21 @@ namespace CloudMouse::App
             APP_LOGGER("Received CALL_LIGHT_OFF_SERVICE for entity: %s", event.getStringData().c_str());
             dataService->setLightOff(event.getStringData());
             break;
+
+        case AppEventType::CALL_COVER_CLOSE_SERVICE:
+            APP_LOGGER("Received CALL_COVER_CLOSE_SERVICE for entity: %s", event.getStringData().c_str());
+            dataService->setCoverClose(event.getStringData());
+            break;
+
+        case AppEventType::CALL_COVER_OPEN_SERVICE:
+            APP_LOGGER("Received CALL_COVER_OPEN_SERVICE for entity: %s", event.getStringData().c_str());
+            dataService->setCoverOpen(event.getStringData());
+            break;
+            
+        case AppEventType::CALL_COVER_STOP_SERVICE:
+            APP_LOGGER("Received CALL_COVER_STOP_SERVICE for entity: %s", event.getStringData().c_str());
+            dataService->setCoverStop(event.getStringData());
+            break;
         }
     }
 
