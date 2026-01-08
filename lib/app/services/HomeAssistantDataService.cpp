@@ -129,6 +129,9 @@ namespace CloudMouse::App::Services
     bool HomeAssistantDataService::setCoverClose(const String &entityId) { return callService("cover", "close_cover", entityId); }
     bool HomeAssistantDataService::setClimateTemperature(const String &entityId, const float &temperature) { return callService("climate", "set_temperature", entityId, "\"temperature\": " + String(temperature)); }
     bool HomeAssistantDataService::setClimateMode(const String &entityId, const String &mode) { return callService("climate", "set_hvac_mode", entityId, "\"hvac_mode\": \"" + mode + "\""); }
+    bool HomeAssistantDataService::setAllLightsOff() { return callService("light", "turn_off", "all"); }
+    bool HomeAssistantDataService::setAllCoversDown() { return callService("cover", "close_cover", "all"); }
+    bool HomeAssistantDataService::setAllSwitchesOff() { return callService("switch", "turn_off", "all"); }
 
     String HomeAssistantDataService::fetchEntityList(HomeAssistantPrefs &prefs)
     {

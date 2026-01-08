@@ -12,18 +12,27 @@ namespace CloudMouse::App
     class HomeAssistantEntity;
 }
 
-
 namespace CloudMouse::App::Ui
 {
-    extern "C" {
-      LV_FONT_DECLARE(font_awesome_solid_20);
+    extern "C"
+    {
+        LV_FONT_DECLARE(font_awesome_solid_20);
+        LV_FONT_DECLARE(font_awesome_solid_48);
     }
 
-    #define FA_ICON_LIGHT   "\xEF\x83\xAB"  // 0xF0EB - Lightbulb
-    #define FA_ICON_CLIMATE "\xEF\x81\xAD"  // 0xF06D - Fire/Thermometer
-    #define FA_ICON_SWITCH  "\xEF\x88\x84"  // 0xF204 - Toggle
-    #define FA_ICON_COVER   "\xEE\x92\xAF"  // 0xE4AF - Window/Blinds
-    #define FA_ICON_SENSOR  "\xEF\x8B\x9B"  // 0xF2DB - Microchip/Sensor
+#define FA_ICON_LIGHT "\xEF\x83\xAB"   // 0xF0EB - Lightbulb
+#define FA_ICON_CLIMATE "\xEF\x81\xAD" // 0xF06D - Fire/Thermometer
+#define FA_ICON_SWITCH "\xEF\x88\x84"  // 0xF204 - Toggle
+#define FA_ICON_COVER "\xEE\x92\xAF"   // 0xE4AF - Window/Blinds
+#define FA_ICON_SENSOR "\xEF\x8B\x9B"  // 0xF2DB - Microchip/Sensor
+
+#define FA_SUN "\xEF\x86\x85"
+#define FA_SUN_CLOUD "\xEF\x9B\x84"
+#define FA_CLOUD "\xEF\x83\x82"
+#define FA_CLOUD_RAIN "\xEF\x9D\x80"
+#define FA_SNOWFLAKE "\xEF\x8B\x9C"
+#define FA_BOLT_CLOUD "\xEF\x9D\xAC"
+#define FA_SMOG "\xEF\x9D\xA9"
 
     using namespace CloudMouse::App::Services;
     using namespace CloudMouse::App;
@@ -38,8 +47,9 @@ namespace CloudMouse::App::Ui
         LIGHT_DETAIL,
         SENSOR_DETAIL,
         COVER_DETAIL,
+        DASHBOARD,
     };
-    
+
     class HomeAssistantDisplayManager
     {
     public:
@@ -47,7 +57,6 @@ namespace CloudMouse::App::Ui
         ~HomeAssistantDisplayManager();
 
         void init();
-        // void show();
 
         void processAppEvent(const AppEventData &event);
 
@@ -63,8 +72,12 @@ namespace CloudMouse::App::Ui
             instance->onDisplayEvent(event);
         }
 
+        void startTimeUpdates();
+        void stopTimeUpdates();
+
     private:
         ViewType current_view = ViewType::LOADING;
+        lv_timer_t *time_update_timer;
 
         void renderEntityList();
         void renderEntityDetail(const String &entityId);
@@ -75,6 +88,10 @@ namespace CloudMouse::App::Ui
         void renderCoverDetail(const String &entityId);
         void renderLoading();
         void resetContentContainer();
+        void renderDashboard();
+
+        static void timeUpdateCallback(lv_timer_t *timer);
+        void updateTime();
 
         lv_group_t *encoder_group;
 
@@ -100,7 +117,7 @@ namespace CloudMouse::App::Ui
         lv_obj_t *sidebar_btn_cover;
         lv_obj_t *sidebar_btn_clima;
         lv_obj_t *sidebar_btn_sensor;
-        
+
         // climate screen items
         lv_obj_t *climate_arc_slider;
         lv_obj_t *climate_label_state;
@@ -131,6 +148,14 @@ namespace CloudMouse::App::Ui
         lv_obj_t *cover_btn_off;
         lv_obj_t *cover_btn_dwn;
 
+        // dashboard
+        lv_obj_t *dateLabelDay;
+        lv_obj_t *dateLabelDate;
+        lv_obj_t *timeLabel;
+        lv_obj_t *labelForecastIcon;
+        lv_obj_t *labelForecastWeather;
+        lv_obj_t *labelForecastTemperature;
+
         // Entity list items
         lv_obj_t *entity_list_container;
         int selected_entity_index = 0;
@@ -146,7 +171,8 @@ namespace CloudMouse::App::Ui
         HomeAssistantPrefs &prefs;
 
         // Add filter state
-        enum class EntityFilter {
+        enum class EntityFilter
+        {
             ALL,
             LIGHT,
             SWITCH,
@@ -154,15 +180,16 @@ namespace CloudMouse::App::Ui
             COVER,
             SENSOR,
         };
-        
+
         EntityFilter current_filter = EntityFilter::ALL;
-        
+
         // Filter colors
-        struct FilterColors {
+        struct FilterColors
+        {
             uint32_t bg_color;
             uint32_t border_color;
         };
-        
+
         FilterColors getFilterColors(EntityFilter filter);
         void setActiveFilter(EntityFilter filter);
         void updateSidebarStyles();
@@ -181,7 +208,7 @@ namespace CloudMouse::App::Ui
         void createHeader(lv_obj_t *parent, const char *title);
         void createClimateDetailScreen();
         void createSwitchDetailScreen();
-        
+
         // Navigation
         void showLoading();
         void showConfigNeeded(const String &url);
@@ -197,8 +224,9 @@ namespace CloudMouse::App::Ui
         void populateEntityList();
 
         // Helpers
-        void updateEntityItem(const String& entityId);
-        void updateStateLabel(lv_obj_t* item, std::shared_ptr<HomeAssistantEntity> entityData);
+        void updateEntityItem(const String &entityId);
+        void updateStateLabel(lv_obj_t *item, std::shared_ptr<HomeAssistantEntity> entityData);
+        const char* getWeatherIconFA(const char* state);
     };
 
 } // namespace CloudMouse::App::Ui

@@ -380,7 +380,7 @@ namespace CloudMouse::Network
 
             // Initialize NTP time synchronization
             SDK_LOGGER("⏰ Initializing network time synchronization...");
-            CloudMouse::Utils::NTPManager::init();
+            CloudMouse::Utils::NTPManager::init(3600);
             break;
 
         case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:

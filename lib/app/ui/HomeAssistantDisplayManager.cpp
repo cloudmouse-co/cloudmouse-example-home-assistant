@@ -71,7 +71,7 @@ namespace CloudMouse::App::Ui
 
         case AppEventType::CONFIG_SET:
             APP_LOGGER("RECEIVED CONFIG_SET - populating entity list");
-            showEntityList();
+            renderDashboard();
             break;
 
         case AppEventType::ENTITY_UPDATED:
@@ -86,7 +86,7 @@ namespace CloudMouse::App::Ui
 
         case AppEventType::DISPLAY_UPLEVEL:
             APP_LOGGER("RECEIVED DISPLAY_UPLEVEL");
-            if (current_view == ViewType::ENTITY_LIST)
+            if (current_view == ViewType::ENTITY_LIST || current_view == ViewType::DASHBOARD)
             {
                 focusSidebar();
             }
@@ -139,9 +139,7 @@ namespace CloudMouse::App::Ui
             }
 
             break;
-
         }
-        
 
         case CloudMouse::EventType::ENCODER_CLICK:
         {
@@ -153,7 +151,7 @@ namespace CloudMouse::App::Ui
 
                 if (focused)
                 {
-                    const char * entityId = (const char *)lv_obj_get_user_data(focused);
+                    const char *entityId = (const char *)lv_obj_get_user_data(focused);
 
                     // Check for "toggle action" if exists call it...
                     if (String(entityId).startsWith("light."))
@@ -183,19 +181,19 @@ namespace CloudMouse::App::Ui
                         }
                     }
                     //.. otherwise show detail
-                    else 
+                    else
                     {
                         // Get entity_id directly from user_data (already stored correctly!)
-    
+
                         if (entityId)
                         {
                             APP_LOGGER("Selected entity: %s", entityId);
-    
+
                             CloudMouse::EventBus::instance().sendToMain(
                                 toSDKEvent(AppEventData::fetchEntityStatus(entityId)));
-    
+
                             currentEntityId = String(entityId);
-    
+
                             showEntityDetail(entityId);
                         }
                     }
@@ -219,16 +217,15 @@ namespace CloudMouse::App::Ui
                     {
                         lv_obj_remove_state(climate_arc_slider, LV_STATE_EDITED);
                         APP_LOGGER("Arc editing: OFF");
-                        float temp = currentTargetValue / 10.0f;;
+                        float temp = currentTargetValue / 10.0f;
+                        ;
                         CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callClimateSetTemperature(currentEntityId, temp)));
-
                     }
                 }
                 else if (focused == climate_btn_on)
                 {
                     APP_LOGGER("ON button clicked!");
                     CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callClimateSetMode(currentEntityId, "heat")));
-
                 }
                 else if (focused == climate_btn_off)
                 {
@@ -277,7 +274,7 @@ namespace CloudMouse::App::Ui
                     APP_LOGGER("CLOSE button clicked!");
                     CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callCoverClose(currentEntityId)));
                 }
-                else 
+                else
                 {
                     APP_LOGGER("STOP button clicked!");
                     CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::callCoverStop(currentEntityId)));
@@ -408,6 +405,8 @@ namespace CloudMouse::App::Ui
 
     void HomeAssistantDisplayManager::showConfigNeeded(const String &url)
     {
+        stopTimeUpdates();
+
         // Aggiorna URL
         lv_obj_t *url_label = (lv_obj_t *)lv_obj_get_user_data(
             lv_obj_get_child(screen_config_needed, 1)); // container
@@ -605,8 +604,10 @@ namespace CloudMouse::App::Ui
     {
         lv_obj_clean(content_container);
         lv_group_remove_all_objs(encoder_group);
-        
+
         // Reset to default state
+        lv_obj_set_size(content_container, 410, 280);
+        lv_obj_align(content_container, LV_ALIGN_TOP_RIGHT, 0, 40);
         lv_obj_set_flex_flow(content_container, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_flex_align(content_container, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
         lv_obj_set_scrollbar_mode(content_container, LV_SCROLLBAR_MODE_OFF);
@@ -642,6 +643,8 @@ namespace CloudMouse::App::Ui
 
     void HomeAssistantDisplayManager::showEntityList()
     {
+        stopTimeUpdates();
+
         lv_screen_load(screen_main);
         current_view = ViewType::ENTITY_LIST;
         renderEntityList();
@@ -656,16 +659,6 @@ namespace CloudMouse::App::Ui
         APP_LOGGER("Showing detail for entity %s", entityId);
 
         resetContentContainer();
-
-        // // Clean content
-        // lv_obj_clean(content_container);
-        // lv_group_remove_all_objs(encoder_group);
-
-        // // Set layout for list view
-        // lv_obj_set_flex_flow(content_container, LV_FLEX_FLOW_COLUMN);
-        // lv_obj_set_scrollbar_mode(content_container, LV_SCROLLBAR_MODE_AUTO);
-        // lv_obj_add_flag(content_container, LV_OBJ_FLAG_SCROLLABLE);
-        // lv_obj_remove_flag(content_container, LV_OBJ_FLAG_SCROLL_MOMENTUM);
 
         auto entity = AppStore::instance().getEntity(entityId);
         lv_label_set_text(header_list_label, entity->getFriendlyName());
@@ -1048,11 +1041,15 @@ namespace CloudMouse::App::Ui
     {
         APP_LOGGER("Showing detail for entity %s", entityId);
 
+        stopTimeUpdates();
+
         renderEntityDetail(entityId);
     }
 
     void HomeAssistantDisplayManager::showLoading()
     {
+        stopTimeUpdates();
+
         lv_screen_load(screen_main);
         renderLoading();
     }
@@ -1132,8 +1129,12 @@ namespace CloudMouse::App::Ui
     {
         APP_LOGGER("Rendering entity list with filter: %d", (int)current_filter);
 
-        resetContentContainer();        
-        
+        current_view = ViewType::ENTITY_LIST;
+
+        stopTimeUpdates();
+
+        resetContentContainer();
+
         // sett scrollbar mode
         lv_obj_set_scrollbar_mode(content_container, LV_SCROLLBAR_MODE_AUTO);
         lv_obj_add_flag(content_container, LV_OBJ_FLAG_SCROLLABLE);
@@ -1439,9 +1440,169 @@ namespace CloudMouse::App::Ui
     {
         current_filter = filter;
         updateSidebarStyles();
-        updateHeaderLabel();
-        renderEntityList(); // Re-populate with new filter
-        focusEntityList();  // Return focus to entity list
+        if (filter == EntityFilter::ALL)
+        {
+            renderDashboard();
+        }
+        else
+        {
+            updateHeaderLabel();
+            renderEntityList(); // Re-populate with new filter
+            focusEntityList();  // Return focus to entity list
+        }
+    }
+
+    void HomeAssistantDisplayManager::renderDashboard()
+    {
+        current_view = ViewType::DASHBOARD;
+
+        resetContentContainer();
+
+        lv_obj_set_size(content_container, 410, 320);
+        lv_obj_align(content_container, LV_ALIGN_TOP_RIGHT, 0, 0);
+        lv_obj_set_layout(content_container, LV_LAYOUT_NONE);
+        lv_label_set_text(header_list_label, "");
+
+        lv_obj_t *weather_container = lv_obj_create(content_container);
+        lv_obj_set_size(weather_container, 400, 150);
+        lv_obj_set_pos(weather_container, 0, 10);
+        lv_obj_set_style_bg_color(weather_container, lv_color_hex(0x101010), 0);
+        lv_obj_set_style_border_width(weather_container, 0, 0);
+        lv_obj_set_style_pad_all(weather_container, 5, 0);
+        lv_obj_move_foreground(weather_container);
+
+        // Date (day, month, date)
+        dateLabelDay = lv_label_create(weather_container);
+        lv_obj_set_style_text_font(dateLabelDay, &lv_font_montserrat_24, 0);
+        lv_obj_set_style_text_color(dateLabelDay, lv_color_hex(0xCCCCCC), 0);
+        lv_label_set_text(dateLabelDay, "Loading...");
+        lv_obj_align(dateLabelDay, LV_ALIGN_TOP_LEFT, 15, 5);
+
+        dateLabelDate = lv_label_create(weather_container);
+        lv_obj_set_style_text_font(dateLabelDate, &lv_font_montserrat_16, 0);
+        lv_obj_set_style_text_color(dateLabelDate, lv_color_hex(0x888888), 0);
+        lv_label_set_text(dateLabelDate, "Loading...");
+        lv_obj_align(dateLabelDate, LV_ALIGN_TOP_LEFT, 15, 30);
+
+        // Time (HH:MM:SS)
+        timeLabel = lv_label_create(weather_container);
+        lv_obj_set_size(timeLabel, 150, 50);
+        lv_obj_set_style_text_font(timeLabel, &lv_font_montserrat_36, 0);
+        lv_obj_set_style_text_color(timeLabel, lv_color_hex(0xFFFFFF), 0);
+        lv_label_set_text(timeLabel, "--:--:--");
+        lv_obj_align(timeLabel, LV_ALIGN_TOP_RIGHT, 0, 5);
+
+        labelForecastIcon = lv_label_create(weather_container);
+        lv_obj_set_style_text_font(labelForecastIcon, &font_awesome_solid_48, 0);
+        lv_obj_set_style_text_color(labelForecastIcon, lv_color_hex(0xFFAA00), 0);
+        lv_label_set_text(labelForecastIcon, FA_SUN);
+        lv_obj_align(labelForecastIcon, LV_ALIGN_BOTTOM_LEFT, 15, -15);
+
+        labelForecastWeather = lv_label_create(weather_container);
+        lv_obj_set_style_text_font(labelForecastWeather, &lv_font_montserrat_16, 0);
+        lv_obj_set_style_text_color(labelForecastWeather, lv_color_hex(0x888888), 0);
+        lv_label_set_text(labelForecastWeather, "------");
+        lv_obj_align(labelForecastWeather, LV_ALIGN_BOTTOM_LEFT, 90, -28);
+
+        labelForecastTemperature = lv_label_create(weather_container);
+        lv_obj_set_style_text_font(labelForecastTemperature, &lv_font_montserrat_48, 0);
+        lv_obj_set_style_text_color(labelForecastTemperature, lv_color_hex(0xFFFFFF), 0);
+        lv_label_set_text(labelForecastTemperature, "--.-°");
+        lv_obj_align(labelForecastTemperature, LV_ALIGN_BOTTOM_RIGHT, -15, -15);
+
+        auto forecastData = AppStore::instance().getEntity("weather.forecast_casa");
+
+        if (forecastData)
+        {
+            const char *state = forecastData->getState();
+            const double temp = forecastData->getAttribute("temperature");
+            char tempStr[32];
+            snprintf(tempStr, sizeof(tempStr), "%.1f°", temp);
+    
+            APP_LOGGER("showing forecast data state: %s - temperature: %.1f", state, temp);
+    
+            lv_label_set_text(labelForecastIcon, getWeatherIconFA(state));
+            lv_label_set_text(labelForecastWeather, state);
+            lv_label_set_text(labelForecastTemperature, tempStr);
+        }
+
+
+        lv_obj_t *buttons_container = lv_obj_create(content_container);
+        lv_obj_set_size(buttons_container, 400, 150);
+        lv_obj_align(buttons_container, LV_ALIGN_BOTTOM_RIGHT, 0, 10);
+        lv_obj_set_flex_align(buttons_container, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_SPACE_EVENLY);
+        lv_obj_set_flex_flow(buttons_container, LV_FLEX_FLOW_ROW);
+        lv_obj_set_style_bg_color(buttons_container, lv_color_hex(0x000000), 0);
+        lv_obj_set_style_border_width(buttons_container, 0, 0);
+        lv_obj_set_style_pad_all(buttons_container, 15, 15);
+
+        lv_obj_t *btn_switch_all_lights_off = lv_button_create(buttons_container);
+        lv_obj_set_size(btn_switch_all_lights_off, 100, 100);
+        lv_obj_align(btn_switch_all_lights_off, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_set_style_bg_color(btn_switch_all_lights_off, lv_color_hex(0x8936ec), 0);
+        lv_obj_set_style_shadow_width(btn_switch_all_lights_off, 0, LV_PART_MAIN);
+        lv_obj_set_style_radius(btn_switch_all_lights_off, 10, LV_PART_MAIN);
+        lv_obj_add_flag(btn_switch_all_lights_off, LV_OBJ_FLAG_CLICKABLE);
+        // lv_obj_set_style_bg_color(sidebar_btn_light, lv_color_hex(0x535353), LV_STATE_FOCUSED);
+
+        lv_obj_add_event_cb(btn_switch_all_lights_off, [](lv_event_t *e)
+                            {
+        CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::event(AppEventType::CALL_ALL_LIGHTS_OFF)));
+        }, LV_EVENT_CLICKED, this);
+
+        lv_obj_t *label_lights = lv_label_create(btn_switch_all_lights_off);
+        lv_label_set_text(label_lights, FA_ICON_LIGHT);
+        lv_obj_set_style_text_font(label_lights, &font_awesome_solid_20, 0);
+        lv_obj_set_style_text_color(label_lights, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_center(label_lights);
+
+
+        lv_obj_t *btn_put_all_cover_down = lv_button_create(buttons_container);
+        lv_obj_set_size(btn_put_all_cover_down, 100, 100);
+        lv_obj_align(btn_put_all_cover_down, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_set_style_bg_color(btn_put_all_cover_down, lv_color_hex(0x227c71), 0);
+        lv_obj_set_style_shadow_width(btn_put_all_cover_down, 0, LV_PART_MAIN);
+        lv_obj_set_style_radius(btn_put_all_cover_down, 10, LV_PART_MAIN);
+        lv_obj_add_flag(btn_put_all_cover_down, LV_OBJ_FLAG_CLICKABLE);
+
+        lv_obj_add_event_cb(btn_put_all_cover_down, [](lv_event_t *e)
+                            {
+        CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::event(AppEventType::CALL_ALL_COVERS_DOWN)));
+        }, LV_EVENT_CLICKED, this);
+
+        lv_obj_t *label_covers = lv_label_create(btn_put_all_cover_down);
+        lv_label_set_text(label_covers, FA_ICON_COVER);
+        lv_obj_set_style_text_font(label_covers, &font_awesome_solid_20, 0);
+        lv_obj_set_style_text_color(label_covers, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_center(label_covers);
+
+
+
+        lv_obj_t *btn_set_all_switch_off = lv_button_create(buttons_container);
+        lv_obj_set_size(btn_set_all_switch_off, 100, 100);
+        lv_obj_align(btn_set_all_switch_off, LV_ALIGN_CENTER, 0, 0);
+        lv_obj_set_style_bg_color(btn_set_all_switch_off, lv_color_hex(0x4b57f8), 0);
+        lv_obj_set_style_shadow_width(btn_set_all_switch_off, 0, LV_PART_MAIN);
+        lv_obj_set_style_radius(btn_set_all_switch_off, 10, LV_PART_MAIN);
+        lv_obj_add_flag(btn_set_all_switch_off, LV_OBJ_FLAG_CLICKABLE);
+
+        lv_obj_add_event_cb(btn_set_all_switch_off, [](lv_event_t *e)
+                            {
+        CloudMouse::EventBus::instance().sendToMain(toSDKEvent(AppEventData::event(AppEventType::CALL_ALL_SWITCH_OFF)));
+        }, LV_EVENT_CLICKED, this);
+
+        lv_obj_t *label_switches = lv_label_create(btn_set_all_switch_off);
+        lv_label_set_text(label_switches, FA_ICON_SWITCH);
+        lv_obj_set_style_text_font(label_switches, &font_awesome_solid_20, 0);
+        lv_obj_set_style_text_color(label_switches, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_center(label_switches);
+
+        lv_group_add_obj(encoder_group, btn_switch_all_lights_off);
+        lv_group_add_obj(encoder_group, btn_put_all_cover_down);
+        lv_group_add_obj(encoder_group, btn_set_all_switch_off);
+        lv_group_focus_obj(btn_switch_all_lights_off);
+
+        startTimeUpdates();
     }
 
     // =========================================================
@@ -1543,6 +1704,16 @@ namespace CloudMouse::App::Ui
 
             APP_LOGGER("⚠️ Entity item not found in list: %s", entityId.c_str());
         }
+        else if (entityId == "weather.forecast_casa" && current_view == ViewType::DASHBOARD)
+        {
+            const char *state = entityData->getState();
+            const double temp = entityData->getAttribute("temperature");
+            char tempStr[32];
+            snprintf(tempStr, sizeof(tempStr), "%.1f°", temp);
+            lv_label_set_text(labelForecastIcon, getWeatherIconFA(state));
+            lv_label_set_text(labelForecastWeather, state);
+            lv_label_set_text(labelForecastTemperature, tempStr);
+        }
     }
 
     // Helper to update just the state label
@@ -1584,6 +1755,108 @@ namespace CloudMouse::App::Ui
                 lv_label_set_text(state_label, state);
             }
         }
+    }
+
+    void HomeAssistantDisplayManager::timeUpdateCallback(lv_timer_t *timer)
+    {
+        HomeAssistantDisplayManager *self = (HomeAssistantDisplayManager *)lv_timer_get_user_data(timer);
+        self->updateTime();
+    }
+
+    void HomeAssistantDisplayManager::startTimeUpdates()
+    {
+        // Crea timer che chiama updateTime ogni 1000ms
+        time_update_timer = lv_timer_create(timeUpdateCallback, 99, this);
+    }
+
+    void HomeAssistantDisplayManager::stopTimeUpdates()
+    {
+        if (time_update_timer)
+        {
+            lv_timer_delete(time_update_timer);
+            time_update_timer = nullptr;
+        }
+    }
+
+    void HomeAssistantDisplayManager::updateTime()
+    {
+
+        if (current_view != ViewType::DASHBOARD)
+        {
+            stopTimeUpdates();
+            return;
+        }
+
+        // Also check if labels still exist
+        if (!dateLabelDay || !dateLabelDate || !timeLabel)
+        {
+            return;
+        }
+
+        static int last_second = -1;
+
+        time_t now = time(nullptr);
+        struct tm *timeinfo = localtime(&now);
+
+        if (timeinfo->tm_year > (2020 - 1900))
+        {
+            // Only update when seconds actually change
+            if (timeinfo->tm_sec != last_second)
+            {
+                last_second = timeinfo->tm_sec;
+
+                static char dateStrDay[64];
+                static char dateStrDate[64];
+                char timeStr[16];
+
+                strftime(dateStrDay, sizeof(dateStrDay), "%A", timeinfo);
+                strftime(dateStrDate, sizeof(dateStrDate), "%B %d, %Y", timeinfo);
+                strftime(timeStr, sizeof(timeStr), "%H:%M:%S", timeinfo);
+
+                lv_label_set_text(dateLabelDay, dateStrDay);
+                lv_label_set_text(dateLabelDate, dateStrDate);
+                lv_label_set_text(timeLabel, timeStr);
+            }
+        }
+    }
+
+    const char *HomeAssistantDisplayManager::getWeatherIconFA(const char *state)
+    {
+        if (strcmp(state, "sunny") == 0 || strcmp(state, "clear-night") == 0)
+        {
+            return FA_SUN;
+        }
+        if (strcmp(state, "partlycloudy") == 0)
+        {
+            return FA_SUN_CLOUD;
+        }
+        if (strcmp(state, "cloudy") == 0)
+        {
+            return FA_CLOUD;
+        }
+        if (strcmp(state, "fog") == 0 || strcmp(state, "hazy") == 0)
+        {
+            return FA_SMOG;
+        }
+        if (strcmp(state, "rainy") == 0 || strcmp(state, "pouring") == 0)
+        {
+            return FA_CLOUD_RAIN;
+        }
+        if (strcmp(state, "snowy") == 0 || strcmp(state, "snowy-rainy") == 0)
+        {
+            return FA_SNOWFLAKE;
+        }
+        if (strcmp(state, "lightning") == 0 || strcmp(state, "lightning-rainy") == 0)
+        {
+            return FA_BOLT_CLOUD;
+        }
+        // if (strcmp(state, "windy") == 0 || strcmp(state, "exceptional") == 0)
+        // {
+        //     return FA_WIND;
+        // }
+
+        // Default fallback
+        return FA_CLOUD;
     }
 
 }

@@ -62,6 +62,9 @@ namespace CloudMouse::App
         CALL_COVER_STOP_SERVICE = 47,
         CALL_CLIMATE_SET_TEMPERATURE = 48,
         CALL_CLIMATE_SET_MODE = 49,
+        CALL_ALL_LIGHTS_OFF = 50,
+        CALL_ALL_COVERS_DOWN = 51,
+        CALL_ALL_SWITCH_OFF = 52,
         
         DISPLAY_UPLEVEL = 80,
 
@@ -170,7 +173,7 @@ namespace CloudMouse::App
             snprintf(evt.stringData, sizeof(evt.stringData), "%s|%s", entity_id.c_str(), mode);
             return evt;
         }
-        
+
         /**
          * Set string payload with automatic truncation and null termination
          * Safely copies string data with bounds checking to prevent buffer overflow

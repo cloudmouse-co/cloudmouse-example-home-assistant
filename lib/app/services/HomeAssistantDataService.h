@@ -35,6 +35,10 @@ namespace CloudMouse::App::Services
         bool setClimateTemperature(const String &entityId, const float &temperature);
         bool setClimateMode(const String &entityId, const String &mode);
 
+        bool setAllLightsOff();
+        bool setAllCoversDown();
+        bool setAllSwitchesOff();
+
         static String fetchEntityList(HomeAssistantPrefs &prefs);
 
     private:

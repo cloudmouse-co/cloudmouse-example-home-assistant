@@ -2,6 +2,7 @@
 #include "./network/HomeAssistantWebSocketClient.h"
 #include "./model/HomeAssistantAppStore.h"
 #include "../utils/Logger.h"
+#include "../utils/NTPManager.h"
 #include "utils/HomeAssistantUtils.h"
 
 namespace CloudMouse::App
@@ -148,7 +149,7 @@ namespace CloudMouse::App
             dataService->setClimateMode(String(entity_id), String(mode));
             break;
         }
-        
+
         case AppEventType::CALL_CLIMATE_SET_TEMPERATURE:
         {
             APP_LOGGER("Received CALL_CLIMATE_SET_TEMPERATURE for entity: %s", event.getStringData().c_str());
@@ -159,6 +160,21 @@ namespace CloudMouse::App
             dataService->setClimateTemperature(String(entity_id), temp);
             break;
         }
+
+        case AppEventType::CALL_ALL_LIGHTS_OFF:
+            APP_LOGGER("Received CALL_ALL_LIGHTS_OFF for entity: %s", event.getStringData().c_str());
+            dataService->setAllLightsOff();
+            break;
+
+        case AppEventType::CALL_ALL_COVERS_DOWN:
+            APP_LOGGER("Received CALL_ALL_COVERS_DOWN for entity: %s", event.getStringData().c_str());
+            dataService->setAllCoversDown();
+            break;
+            
+        case AppEventType::CALL_ALL_SWITCH_OFF:
+            APP_LOGGER("Received CALL_ALL_SWITCH_OFF for entity: %s", event.getStringData().c_str());
+            dataService->setAllSwitchesOff();
+            break;
         }
     }
 
@@ -215,6 +231,9 @@ namespace CloudMouse::App
 
     void HomeAssistantApp::handleWiFiConnected()
     {
+
+        // CloudMouse::Utils::NTPManager::setTimezone(3600, 3600);
+
         if (configServer && !configServer->init())
         {
             APP_LOGGER("❌ Failed to initialize config server");
