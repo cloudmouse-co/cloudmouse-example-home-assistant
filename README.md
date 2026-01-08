@@ -1,211 +1,300 @@
-# CloudMouse LVGL Example
-
-🎨 **Example implementation of LVGL graphics library on top of CloudMouse SDK**
-
-This project demonstrates how to integrate [LVGL (Light and Versatile Graphics Library)](https://lvgl.io/) with the [CloudMouse SDK](https://github.com/yourusername/cloudmouse-sdk) to create rich, interactive user interfaces on the ESP32-based [CloudMouse](https://cloudmouse.co) device.
+# CloudMouse Home Assistant App - Developer Documentation
 
 ## 📋 Overview
 
-This example extends the CloudMouse SDK boilerplate by replacing the basic display rendering with LVGL's powerful widget system. It showcases:
+A complete Home Assistant integration for [CloudMouse IoT devices](https://cloudmouse.co), featuring real-time WebSocket updates, interactive LVGL UI, and comprehensive entity control across multiple device types.
 
-- Multi-screen navigation (Hello World, WiFi Setup, AP Mode, QR Code displays)
-- Encoder integration with LVGL input system
-- Event-driven architecture between hardware and UI
-- Proper LVGL v9 implementation with ESP32 dual-core support
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Platform](https://img.shields.io/badge/platform-ESP32-green.svg)
+![LVGL](https://img.shields.io/badge/LVGL-v9.4-orange.svg)
 
-## 🔧 Compatibility
-
-**Arduino IDE** - out-of-the-box.
-**Platformio** - with source code switching (see below!).
-
-### Important: Source Code Switching
-
-> 💡 The project maintains a single codebase that works with both Arduino IDE and PlatformIO. The `src/main.cpp` file is kept in sync but needs to be toggled:
-
-**To use PlatformIO:**
-1. Open `src/main.cpp` in your editor
-2. **Uncomment the entire file**
-3. Save and build with PlatformIO
-
-**To switch back to Arduino IDE:**
-1. Open `src/main.cpp` in your editor
-2. **Re-comment the entire file**
-3. Save and build with Arduino IDE
-
-> 💡 **Pro tip**: Most editors support block comment toggling with `Ctrl+/` (Windows/Linux) or `Cmd+/` (Mac). Select all (`Ctrl+A`) then toggle comments!
-
-
-## 📚 Prerequisites
-
-Before using this example, make sure you have:
-
-1. **CloudMouse SDK** - Base SDK with hardware abstraction layer
-   - 📖 [CloudMouse SDK Repository](https://github.com/tibonilab/cloudmouse-boilerplate)
-   
-2. **LVGL Library** - Graphics library (v9.x recommended)
-   - 📖 [LVGL Official Documentation](https://docs.lvgl.io/)
-   - Install via Arduino Library Manager: `LVGL`
-
-3. **Required Hardware**
-   - CloudMouse device
-
-## 🚀 Setup Instructions
-
-### 1. Install Dependencies
-
-Install the following libraries via Arduino Library Manager:
-- `LVGL` (v9.x)
-
-### 2. Configure LVGL
-
-**IMPORTANT:** You need to add the `lv_conf.h` configuration file to your Arduino libraries folder, as [mentioned here](https://docs.lvgl.io/8/get-started/platforms/arduino.html#configure-lvgl).
-
-**Location:**
-```
-~/Arduino/libraries/lv_conf.h
-```
-
-> ℹ️ A reference configuration is available in this repository at `lib/config/lv_conf.h` for guidance.
-
-Or you can copy and paste the following config snippet.
-
-```cpp
-#ifndef LV_CONF_H
-#define LV_CONF_H
-
-#define LV_USE_PERF_MONITOR 1
-#define LV_USE_MEM_MONITOR 1
-
-#define LV_COLOR_DEPTH 16
-#define LV_COLOR_16_SWAP 1
-#define LV_MEM_SIZE (48U * 1024U)
-
-#define LV_FONT_MONTSERRAT_12 1
-#define LV_FONT_MONTSERRAT_14 1
-#define LV_FONT_MONTSERRAT_16 1
-#define LV_FONT_MONTSERRAT_18 1
-#define LV_FONT_MONTSERRAT_20 1
-#define LV_FONT_MONTSERRAT_24 1
-#define LV_FONT_MONTSERRAT_28 1
-#define LV_FONT_MONTSERRAT_32 1
-#define LV_FONT_MONTSERRAT_36 1
-#define LV_FONT_MONTSERRAT_48 1
-
-#define LV_FONT_DEFAULT &lv_font_montserrat_14
-#define LV_TXT_ENC LV_TXT_ENC_UTF8
-
-#define LV_TICK_CUSTOM 1
-#define LV_TICK_CUSTOM_INCLUDE "Arduino.h"
-#define LV_TICK_CUSTOM_SYS_TIME_EXPR (millis())
-
-#define LV_USE_LOG 1
-#define LV_LOG_LEVEL LV_LOG_LEVEL_WARN
-#define LV_LOG_PRINTF 1
-
-#define LV_USE_ASSERT_NULL 1
-#define LV_USE_ASSERT_MALLOC 1
-#define LV_USE_ASSERT_STYLE 0
-#define LV_USE_ASSERT_MEM_INTEGRITY 0
-#define LV_USE_ASSERT_OBJ 0
-
-#define LV_USE_LABEL 1
-#define LV_USE_BUTTON 1
-#define LV_USE_IMAGE 1
-#define LV_USE_ARC 1
-#define LV_USE_BAR 1
-#define LV_USE_FLEX 1
-#define LV_USE_GRID 1
-#define LV_USE_PSRAM 1
-
-#define LV_USE_SPINNER 1
-#define LV_USE_QRCODE 1
-#define LV_USE_LABEL 1
-
-#endif
-```
-
-
-### 3. Clone and Open
-
-```bash
-git clone https://github.com/cloudmouse-co/cloudmouse-example-lvgl
-```
-
-Open the `.ino` file in Arduino IDE.
-
-### 4. Upload
-
-Select your ESP32 board and upload the sketch.
+> **Note**: This application requires a [CloudMouse device](https://cloudmouse.co) or compatible hardware with ESP32, ILI9488 display, rotary encoder, and RGB LED.
 
 ## 🏗️ Architecture
 
-This example follows the [CloudMouse SDK](https://github.com/cloudmouse-co/cloudmouse-sdk) architecture:
-
+### Core Components
 ```
-┌─────────────────┐
-│   Arduino IDE   │
-│    (.ino)       │
-└────────┬────────┘
-         │
-    ┌────▼─────┐
-    │   Core   │ ◄─── Event Bus
-    └────┬─────┘
-         │
-    ┌────▼──────────────────┐
-    │  DisplayManager       │
-    │  (LVGL Integration)   │
-    └───────────────────────┘
+lib/app/
+├── HomeAssistantApp.cpp/h          # Main orchestrator
+├── model/
+│   ├── HomeAssistantAppStore.h     # Thread-safe entity state management
+│   └── HomeAssistantEntity.h       # Entity data model with PSRAM allocation
+├── network/
+│   ├── HomeAssistantConfigServer   # Web-based configuration interface
+│   └── HomeAssistantWebSocketClient # Real-time HA WebSocket protocol
+├── services/
+│   ├── HomeAssistantDataService    # HTTP API calls & entity fetching
+│   └── HomeAssistantPrefs          # NVS-backed configuration storage
+├── ui/
+│   └── HomeAssistantDisplayManager # LVGL-based UI rendering
+└── utils/
+    └── HomeAssistantUtils          # Entity validation helpers
 ```
 
-**Key Components:**
+## 🔄 State Machine
+```
+INITIALIZING → WIFI_READY → CONFIG_NEEDED → READY → RUNNING
+                    ↓             ↓
+                SETUP_NEEDED   ERROR
+```
 
-- **DisplayManager.cpp** - Main LVGL integration with CloudMouse hardware
-- **LVGL Ticker** - Global timer for LVGL tick updates (5ms interval)
-- **Event System** - Bridges hardware events (encoder, WiFi) to UI
+### State Transitions
 
-## 📖 Key Files
+- **INITIALIZING**: Boot sequence, waiting for WiFi
+- **WIFI_READY**: WiFi connected, validating configuration
+- **SETUP_NEEDED**: No HA credentials configured
+- **CONFIG_NEEDED**: Credentials exist, no entities selected
+- **READY**: All configured, preparing to start
+- **RUNNING**: Active operation with WebSocket connection
 
-| File | Description |
-|------|-------------|
-| [lib/hardware/DisplayManager.cpp](https://github.com/tibonilab/cloudmouse-example-lvgl/blob/main/lib/hardware/DisplayManager.cpp) | LVGL implementation and screen management |
-| [lib/hardware/DisplayManager.h](https://github.com/tibonilab/cloudmouse-example-lvgl/blob/main/lib/hardware/DisplayManager.h) | DisplayManager interface with LVGL ticker setup |
+## 🔌 Event System
 
-## 🎯 Features Demonstrated
+### SDK Event Flow
+```
+Core (Core 0) ← EventBus → Display (Core 1)
+       ↕                           ↕
+   AppOrchestrator          DisplayManager
+```
 
-### Screens
-- **Hello World** - Welcome screen with encoder interaction
-- **WiFi Connecting** - Connection status with spinner animation
-- **AP Mode** - Access Point setup with QR code
-- **AP Connected** - Configuration portal access with QR code
+### Custom App Events
 
-### LVGL Integration
-- Custom display driver for ILI9488 via LovyanGFX
-- Encoder input device for navigation
-- PSRAM buffer allocation for optimal performance
-- Proper v9 API usage with dual buffers
+Events are offset by `+100` from SDK events to avoid conflicts:
+```cpp
+AppEventType::CONFIG_SET (3) → EventType (103)
+```
 
-### Event Handling
-- Encoder rotation events
-- Encoder click/long-press events
-- WiFi state transitions
-- Screen navigation logic
+**Key Events:**
+- `SETUP_NEEDED/SET`: Configuration state changes
+- `CONFIG_NEEDED/SET`: Entity selection state
+- `ENTITY_UPDATED`: WebSocket state change received
+- `FETCH_ENTITY_STATUS`: Request entity refresh
+- `CALL_*_SERVICE`: Execute HA service calls
 
-## 🔗 Useful Links
+## 🗄️ Data Management
 
-- [LVGL Official Website](https://lvgl.io/)
-- [LVGL Documentation](https://docs.lvgl.io/)
-- [LVGL Examples](https://docs.lvgl.io/master/examples.html)
-- [CloudMouse SDK](https://github.com/cloudmouse-co/cloudmouse-sdk)
+### AppStore (Thread-Safe State)
+```cpp
+// Core 0: Write from WebSocket
+AppStore::instance().setEntity(entityId, payload);
 
+// Core 1: Read in UI
+auto entity = AppStore::instance().getEntity(entityId);
+```
 
-## 📝 License
+**Features:**
+- Mutex-protected for dual-core safety
+- PSRAM allocation for large JSON documents
+- `std::shared_ptr` for safe memory management
+- Automatic parsing and validation
 
-This example follows the same license as the CloudMouse SDK.
+### Entity Model
+```cpp
+class HomeAssistantEntity {
+    const char* getEntityId();
+    const char* getState();
+    const char* getFriendlyName();
+    JsonVariant getAttribute(const char* key);
+}
+```
 
-## 🤝 Contributing
+## 🌐 Network Layer
 
-Contributions are welcome! Feel free to open issues or submit pull requests to improve this example.
+### Configuration Server (Port 8080)
+
+**Endpoints:**
+- `GET /home-assistant` → Setup page (host/port/token)
+- `POST /home-assistant/setup` → Save credentials
+- `GET /home-assistant/config` → Entity selection page
+- `POST /home-assistant/config/save` → Save selected entities
+
+**mDNS:** `cloudmouse-{device_id}.local:8080`
+
+### WebSocket Client
+
+**Protocol Flow:**
+1. Connect → `auth_required`
+2. Authenticate with token → `auth_ok`
+3. Subscribe to `state_changed` events
+4. Receive real-time updates
+```cpp
+wsClient->setOnStateChanged([](const String& entityId, const String& stateJson) {
+    AppStore::instance().setEntity(entityId, stateJson);
+    EventBus::instance().sendToUI(
+        toSDKEvent(AppEventData::entityUpdated(entityId))
+    );
+});
+```
+
+## 🎨 UI System (LVGL on Core 1)
+
+### Screen Architecture
+```
+┌─────────────────────────────────────┐
+│  Sidebar (70px)  │  Content (410px) │
+│  ┌─────┐         │                  │
+│  │ 🏠  │ ◄───────┤  Entity List     │
+│  ├─────┤         │  or              │
+│  │ 💡  │         │  Entity Detail   │
+│  ├─────┤         │                  │
+│  │ 🔌  │         │                  │
+│  └─────┘         │                  │
+└─────────────────────────────────────┘
+```
+
+### View Types
+
+1. **LOADING**: Spinner during sync
+2. **CONFIG_NEEDED**: QR code + setup URL
+3. **ENTITY_LIST**: Filtered scrollable list
+4. **ENTITY_DETAIL**: Type-specific controls
+
+### Supported Entity Types
+
+| Type     | Controls | Features |
+|----------|----------|----------|
+| `light.*` | ON/OFF buttons | LED status indicator |
+| `switch.*` | ON/OFF buttons | LED status indicator |
+| `climate.*` | Arc slider, ON/OFF | Temperature control (15-30°C) |
+| `sensor.*` | Read-only display | Value + unit |
+| `cover.*` | OPEN/STOP/CLOSE | Three-button control |
+
+### Filtering System
+```cpp
+enum class EntityFilter {
+    ALL, LIGHT, SWITCH, CLIMA, COVER, SENSOR
+};
+```
+
+Each filter uses unique colors and Font Awesome icons.
+
+## 🔧 Configuration Storage
+
+### NVS Keys
+```cpp
+"ha_api_key"    // Home Assistant long-lived token
+"ha_host"       // HA hostname/IP
+"ha_port"       // HA port (default: 8123)
+"ha_entities"   // JSON array of selected entities
+```
+
+### Entity Storage Format
+```json
+[
+  {
+    "entity_id": "light.living_room",
+    "friendly_name": "Living Room Light",
+    "state": "on"
+  }
+]
+```
+
+## 🎮 Encoder Interactions
+
+| Action | List View | Detail View |
+|--------|-----------|-------------|
+| **Rotate** | Navigate items | Adjust values (climate) |
+| **Click** | Toggle light/switch | Activate button |
+| **Double-Click** | Open detail | - |
+| **Long Press** | Focus sidebar | Back to list |
+
+### Climate Arc Behavior
+
+1. Click arc → Enter edit mode (color changes)
+2. Rotate → Adjust temperature (0.1°C steps)
+3. Click again → Save + send to HA
+
+## 🚀 Service Calls
+```cpp
+// Switch
+dataService->setSwitchOn("switch.garage");
+dataService->setSwitchOff("switch.garage");
+
+// Light
+dataService->setLightOn("light.bedroom");
+dataService->setLightOff("light.bedroom");
+
+// Climate
+dataService->setClimateTemperature("climate.living_room", 22.5);
+dataService->setClimateMode("climate.living_room", "heat");
+
+// Cover
+dataService->setCoverOpen("cover.blinds");
+dataService->setCoverStop("cover.blinds");
+dataService->setCoverClose("cover.blinds");
+```
+
+## 🐛 Debugging
+
+### Logger Macros
+```cpp
+APP_LOGGER("State change: %d -> %d", prev, current);
+```
+
+### Key Debug Points
+
+1. **State transitions**: Watch `changeState()` calls
+2. **WebSocket messages**: Monitor `handleMessage()`
+3. **Entity updates**: Track `AppStore::setEntity()`
+4. **UI events**: Check `processAppEvent()`
+
+### Common Issues
+
+**WebSocket not connecting:**
+- Verify host/port/token in config
+- Check HA allows WebSocket connections
+- Monitor `HomeAssistantWebSocketClient` logs
+
+**Entities not updating:**
+- Confirm WebSocket subscription successful
+- Check entity IDs in `isValidEntity()`
+- Verify AppStore mutex not deadlocked
+
+**UI not responding:**
+- Check Core 1 task is running
+- Verify encoder group has focused objects
+- Monitor LVGL memory usage
+
+## 📦 Dependencies
+
+- **CloudMouse SDK**: Core system, EventBus, hardware managers
+- **ArduinoJson**: Entity parsing and API responses
+- **LVGL 9.4**: UI rendering and input handling
+- **ESP32 Arduino**: WebSocket, HTTP client, NVS
+
+## 🔐 Security Notes
+
+- **Long-lived tokens** are stored in NVS (plaintext)
+- **WebSocket authentication** uses bearer token
+- **No encryption** on local network (standard HA setup)
+- **mDNS** exposes device on local network
+
+## 📝 TODO/Roadmap
+
+- [ ] SSL/TLS support for WebSocket
+- [ ] Scene activation support
+- [ ] Automation triggering
+- [ ] Cover position control (0-100%)
+- [ ] Light brightness/color control
+- [ ] Fan speed control
+- [ ] Media player controls
+
+## 🤝 Integration with SDK
+```cpp
+// main.cpp
+HomeAssistantApp* haApp = new HomeAssistantApp();
+Core::instance().setAppOrchestrator(haApp);
+Core::instance().initialize();
+Core::instance().startUITask();
+
+// Main loop
+void loop() {
+    Core::instance().coordinationLoop();
+    vTaskDelay(pdMS_TO_TICKS(50)); // 20Hz
+}
+```
 
 ---
 
-Made with ❤️ for the CloudMouse community
+**Made with ❤️ for CloudMouse devices**
+
+*Transform your CloudMouse into your smart house controller!*
